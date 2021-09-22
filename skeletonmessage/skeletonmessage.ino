@@ -7,8 +7,8 @@
 #include <Wire.h>
 #include <SensorMessage.h>
 #include <stdint.h>
-SensorMessage sensorMessage(0);
 
+// Union declarations
 typedef union FourBytes{
     uint32_t int_dat;
     unsigned char bytes[4];
@@ -19,50 +19,62 @@ typedef union TwoBytes {
     unsigned char bytes[2];
   };
 
-FourBytes Terminator;
+// Union instantiations, in packet structure order
 FourBytes Packet_Start;
 
-bool toggle = true;
+FourBytes TimeStamp;
 
+TwoBytes PT_HE;
+TwoBytes PT_Purge;
+TwoBytes PT_Pneu;
+TwoBytes PT_FUEL_PV;
+TwoBytes PT_LOX_PV;
+TwoBytes PT_FUEL_INJ;
+TwoBytes PT_CHAM;
+
+TwoBytes TC_FUEL_PV;
+TwoBytes TC_LOX_PV;
+TwoBytes TC_LOX_Valve_Main;
+TwoBytes TC_WATER_In;
+TwoBytes TC_WATER_Out;
+TwoBytes TC_CHAM;
+
+TwoBytes RC_LOX_Level;
+
+TwoBytes FT_Thrust;
+
+FourBytes Terminator;
+
+// Static Delay
 static int BUFFER_DELAY = 100;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  Terminator.int_dat = pow(2,32)-1;
+  // Initialize 
   Packet_Start.int_dat = 0;
-  //4294967295;
-  //Serial.println(Terminator.int_dat);
+  Terminator.int_dat = pow(2,32)-1;  //4294967295;
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  /*if(toggle == true){
-    sensorMessage.PT_HE = 1;                   ///< 16 bit unsigned integer representing the Helium presurrant supply
-    sensorMessage.PT_Purge = random(0,500);                ///< 16 bit unsigned integer representing the Nitrogen purge supply
-    sensorMessage.PT_Pneu = random(0,500);                 ///< 16 bit unsigned integer representing the Nitrogen pneumatic supply
-    sensorMessage.PT_FUEL_PV = random(0,500);              ///< 16 bit unsigned integer representing the Gas above fuel in pressure vessel
-    sensorMessage.PT_LOX_PV = random(0,500);               ///< 16 bit unsigned integer representing the Gas above LOX in pressure vessel
-    sensorMessage.PT_FUEL_INJ = random(0,500);             ///< 16 bit unsigned integer representing the Fuel pressure before entering chamber
-    sensorMessage.PT_CHAM = random(0,500);                 ///< 16 bit unsigned integer representing the Chamber pressure
-    sensorMessage.TC_FUEL_PV = random(0,500);              ///< 16 bit unsigned integer representing the Gas above fuel in pressure vessel (possible surface mount)
-    sensorMessage.TC_LOX_PV = random(0,500);               ///< 16 bit unsigned integer representing the Gas above LOX in pressure vessel (possible surface mount)
-    sensorMessage.TC_LOX_Valve_Main = random(0,500);       ///< 16 bit unsigned integer representing the External sensor for valve chill in and force
-    sensorMessage.RC_LOX_Level = random(0,500);            ///< 16 bit unsigned integer representing the Capacitive level sensor of LOX in pressure vessel
-    sensorMessage.FT_Thrust = random(0,500);               ///< 16 bit unsigned integer representing the Load cell that measures thrust of engine
-    sensorMessage.Send();
-    Serial.println(millis());
-    //delay(10);
-    //toggle = false;
-  }*/
-
-  
-  FourBytes TimeStamp;
-  TimeStamp.int_dat = millis();//+16777217;
-
-  TwoBytes PT_HE;
-  PT_HE.int_dat = 65535; 
+void loop() { 
+  // Values to be sent over serial
+  TimeStamp.int_dat = millis();   //+16777217; //for testing
+  PT_HE.int_dat = random(0,500);
+  PT_Purge.int_dat = random(0,500);
+  PT_Pneu.int_dat = random(0,500);
+  PT_FUEL_PV.int_dat = random(0,500);
+  PT_LOX_PV.int_dat = random(0,500);
+  //PT_FUEL_INJ.int_dat = random(0,500);
+  PT_CHAM.int_dat = random(0,500);
+  TC_FUEL_PV.int_dat = random(0,500);
+  TC_LOX_PV.int_dat = random(0,500);
+  TC_LOX_Valve_Main.int_dat = random(0,500);
+  TC_WATER_In.int_dat = random(0,500);
+  TC_WATER_Out.int_dat = random(0,500);
+  TC_CHAM.int_dat = random(0,500);
+  //RC_LOX_Level.int_dat = random(0,500);
+  FT_Thrust.int_dat = random(0,500);
   
   // Writing the Packet Start bytestring to the Serial Buffer
   Serial.write(Packet_Start.bytes,4);

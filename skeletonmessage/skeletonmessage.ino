@@ -43,10 +43,13 @@ TwoBytes RC_LOX_Level;
 
 TwoBytes FT_Thrust;
 
+TwoBytes FL_WATER;
+
 FourBytes Terminator;
 
 // Static Delay
-static int BUFFER_DELAY = 100;
+// Needs to be larger than the byte-length of the message divided by the baud/10 for bytes/s
+static int BUFFER_DELAY = 5;
 
 void setup() {
   // put your setup code here, to run once:
@@ -60,21 +63,22 @@ void setup() {
 void loop() { 
   // Values to be sent over serial
   TimeStamp.int_dat = millis();   //+16777217; //for testing
-  PT_HE.int_dat = random(0,500);
-  PT_Purge.int_dat = random(0,500);
-  PT_Pneu.int_dat = random(0,500);
-  PT_FUEL_PV.int_dat = random(0,500);
-  PT_LOX_PV.int_dat = random(0,500);
+  PT_HE.int_dat = 10;//random(0,500);
+  PT_Purge.int_dat = 20;//random(0,500);
+  PT_Pneu.int_dat = 30;//random(0,500);
+  PT_FUEL_PV.int_dat = 40;//random(0,500);
+  PT_LOX_PV.int_dat = 50;//random(0,500);
   //PT_FUEL_INJ.int_dat = random(0,500);
-  PT_CHAM.int_dat = random(0,500);
-  TC_FUEL_PV.int_dat = random(0,500);
-  TC_LOX_PV.int_dat = random(0,500);
-  TC_LOX_Valve_Main.int_dat = random(0,500);
-  TC_WATER_In.int_dat = random(0,500);
-  TC_WATER_Out.int_dat = random(0,500);
-  TC_CHAM.int_dat = random(0,500);
+  PT_CHAM.int_dat = 100;//random(0,500);
+  TC_FUEL_PV.int_dat = 110;//random(0,500);
+  TC_LOX_PV.int_dat = 120;//random(0,500);
+  TC_LOX_Valve_Main.int_dat = 130;//random(0,500);
+  TC_WATER_In.int_dat = 140;//random(0,500);
+  TC_WATER_Out.int_dat = 150;//random(0,500);
+  TC_CHAM.int_dat = 300;//random(0,500);
   //RC_LOX_Level.int_dat = random(0,500);
-  FT_Thrust.int_dat = random(0,500);
+  FT_Thrust.int_dat = 500;//random(0,500);
+  FL_WATER.int_dat = 250;//radnom(0,500);
   
   // Writing the Packet Start bytestring to the Serial Buffer
   Serial.write(Packet_Start.bytes,4);
@@ -105,10 +109,13 @@ void loop() {
   // Writing FT Data to the Serial Buffer
   Serial.write(FT_Thrust.bytes, 2);
 
+  // Writing FL Data to the Serial Buffer
+  Serial.write(FL_WATER.bytes, 2);
+
   // Writing the Packet Stop bytestring to the Serial Buffer
   Serial.write(Terminator.bytes, 4);
 
   // Configurable delay
-  delay(SERIAL_DELAY);
+  delay(BUFFER_DELAY);
   
 }

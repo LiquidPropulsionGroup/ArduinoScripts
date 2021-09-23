@@ -1,11 +1,9 @@
 /*
  * SKELETON CODE FOR TESTING SENSOR MESSAGE WITH ZERO DATA
  * Thomas W. C. Carlson
- * 8/25/2021
  */
 
 #include <Wire.h>
-#include <SensorMessage.h>
 #include <stdint.h>
 
 // Union declarations
@@ -79,7 +77,9 @@ void loop() {
   //RC_LOX_Level.int_dat = random(0,500);
   FT_Thrust.int_dat = 500;//random(0,500);
   FL_WATER.int_dat = 250;//radnom(0,500);
-  
+
+
+  // Serial Writes
   // Writing the Packet Start bytestring to the Serial Buffer
   Serial.write(Packet_Start.bytes,4);
 

@@ -3,6 +3,7 @@
 
 #include <Wire.h>
 #include <stdint.h>
+#include <HardwareSerial.h>
 
 // Pin Declarations
 int FUEL_Press_ACTPIN = 13;

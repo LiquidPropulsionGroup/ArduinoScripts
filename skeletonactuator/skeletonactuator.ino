@@ -59,8 +59,6 @@ bool FUEL_Purge_Prev;
 bool LOX_Purge_Prev;
 bool STATE_CHANGED;
 
-int count = 0;
-
 // Global variables for receiving instructions over serial
 const byte MESSAGE_LENGTH = 14;
 char ReceivedChars[MESSAGE_LENGTH];
@@ -69,18 +67,17 @@ bool NewData;
 // Comparison Packet for verifying instruction messages
 // FUEL_Pres(S), LOX_Pres(s), FUEL_Ven(T), LOX_Ven(t), (M)ain, FUEL_Purg(E), FUEL_Purg(e)
 // Interspersed with dummy request character holders
-const char InstructionTemplate[14] = {'S','O','s','O','T','O','t','O','M','O','E','O','e','O'};
+const char InstructionTemplate[14] = {'S','\0','s','\1','T','\0','t','\1','M','\0','E','\1','e','\0'};
 
 // Global variables for storing desired states
 // For receiving instructions
-bool FUEL_Press_Desired;
-bool LOX_Press_Desired;
-bool FUEL_Vent_Desired;
-bool LOX_Vent_Desired;
-bool MAIN_Desired;
-bool FUEL_Purge_Desired;
-bool LOX_Purge_Desired;
-
+OneByte FUEL_Press_Desired;
+OneByte LOX_Press_Desired;
+OneByte FUEL_Vent_Desired;
+OneByte LOX_Vent_Desired;
+OneByte MAIN_Desired;
+OneByte FUEL_Purge_Desired;
+OneByte LOX_Purge_Desired;
 
 void setup() {
   // put your setup code here, to run once:
@@ -132,49 +129,10 @@ void loop() {
   // put your main code here, to run repeatedly:
   // Pull the timestamp at the start of the loop
   TimeStamp.int_dat = millis();
-
-  // Debug
-  if (count >= 10) {
-    FUEL_Press.state = !FUEL_Press.state;
-    count = 0;
-    STATE_CHANGED = true;
-  }
-
-  // Only write to serial if the states have changed
-  if (STATE_CHANGED) {
-    // Serial Writes
-    // Writing the Packet Start bytestring to the Serial Buffer
-//    Serial.write(Packet_Start.bytes,4);
-
-    // Writing the Timestamp to the Serial Buffer
-//    Serial.write(TimeStamp.bytes, 4);
-  
-    // Writing the actuator states to the Serial Buffer
-//    Serial.write(FUEL_Press.bytes, 1);
-//    Serial.write(LOX_Press.bytes, 1);
-//    Serial.write(FUEL_Vent.bytes, 1);
-//    Serial.write(LOX_Vent.bytes, 1);
-//    Serial.write(MAIN.bytes, 1);
-//    Serial.write(FUEL_Purge.bytes, 1);
-//    Serial.write(LOX_Purge.bytes, 1);
-
-    // Writing the Packet Stop bytestring to the Serial Buffer
-//    Serial.write(Terminator.bytes, 4);
-    STATE_CHANGED = false;
-  }
-  
-  // Otherwise do nothing
-  // Debug
-//  Serial.print(count);
-//  Serial.write('\n');
-  count += 1;
-  delay(1000);
-
-
   ReceiveData();
-  Serial.println(ReceivedChars);
   ParseMessage();
   VerifyStates();
+  SendUpdate();
   NewData = false;
 }
 
@@ -223,43 +181,140 @@ void ParseMessage() {
   static int VerifiedCount = 0;
   
   // Pull the message apart into components
-  Serial.println("Do something");
   // Verify message integrity
   for (int i = 0; i <= MESSAGE_LENGTH - 2; i += 2) {
     // For every 2 items in the instruction there should be an identifier character
     if (ReceivedChars[i] == InstructionTemplate[i]) {
       // Check that it matches the template
       Serial.println(ReceivedChars[i]);
-      Serial.println(InstructionTemplate[i]);
-      Serial.println("VERIFIED: " + String(i));
+      Serial.println("VERIFIED: " + String(VerifiedCount));
       VerifiedCount++;
-    } else if (VerifiedCount == MESSAGE_LENGTH / 2) {
+    }
+    if (VerifiedCount == (MESSAGE_LENGTH-2) / 2) {
       // If all characters are verified pair the instruction with the valve
       MESSAGE_GOOD = true;
-      // and reset the verification counter
-      VerifiedCount = 0;
     }
   }
+  // Reset the verification counter
+  Serial.println((MESSAGE_LENGTH-2) / 2);
+  VerifiedCount = 0;
+  Serial.println(MESSAGE_GOOD);
   // Pull the instructions out of the message
   if (MESSAGE_GOOD) {
     // Update the desired states list
-    FUEL_Press_Next = ReceivedChars[1];
-    LOX_Press_Next = ReceivedChars[3];
-    FUEL_Vent_Next = ReceivedChars[5];
-    LOX_Vent_Next = ReceivedChars[7];
-    MAIN_Next = ReceivedChars[9];
-    FUEL_Purge_Next = ReceivedChars[11];
-    LOX_Purge_Next = ReceivedChars[13];
+    FUEL_Press_Desired.bytes[1] = ReceivedChars[1];
+    LOX_Press_Desired.bytes[1] = ReceivedChars[3];
+    FUEL_Vent_Desired.bytes[1] = ReceivedChars[5];
+    LOX_Vent_Desired.bytes[1] = ReceivedChars[7];
+    MAIN_Desired.bytes[1] = ReceivedChars[9];
+    FUEL_Purge_Desired.bytes[1] = ReceivedChars[11];
+    LOX_Purge_Desired.bytes[1] = ReceivedChars[13];
     // And prepare to read a new message
     MESSAGE_GOOD = false;
+    for ( int a = 0; a < sizeof(ReceivedChars);  a++ ) {
+      ReceivedChars[a] = (char)0;
+    }
+    Serial.println(ReceivedChars);
+    Serial.println(FUEL_Press_Desired.bytes[1]);
   }
 }
 
 void VerifyStates() {
-  // Check that the sense wires show a valve is what it is meant to be
-  /*
-    TODO
-  */
+  // Read the sense wire states
+  FUEL_Press.state = digitalRead(FUEL_Press_READPIN);
+  LOX_Press.state = digitalRead(LOX_Press_READPIN);
+  FUEL_Vent.state = digitalRead(FUEL_Vent_READPIN);
+  LOX_Vent.state = digitalRead(LOX_Vent_READPIN);
+  MAIN.state = digitalRead(MAIN_READPIN);
+  FUEL_Purge.state = digitalRead(FUEL_Purge_READPIN);
+  LOX_Purge.state = digitalRead(LOX_Purge_READPIN);
 
+  // Compare the read states to the desired states and set them to be equal to the desired
+  // If FUEL_Press does not match the ordered state
+  if (FUEL_Press.state != FUEL_Press_Desired.state) {
+    // Store current state into previous state
+    FUEL_Press_Prev = FUEL_Press.state;
+    // Write the new state to the pin
+    digitalWrite(FUEL_Press_ACTPIN, FUEL_Press_Desired.state);
+    // Track the state change to send a notification to Pi
+    STATE_CHANGED = true;
+  }
+  // If LOX_Press does not match the ordered state
+  if (LOX_Press.state != LOX_Press_Desired.state) {
+    // Store current state into previous state
+    LOX_Press_Prev = LOX_Press.state;
+    // Write the new state to the pin
+    digitalWrite(LOX_Press_ACTPIN, LOX_Press_Desired.state);
+    // Track the state change to send a notification to Pi
+    STATE_CHANGED = true;
+  }
+  // If FUEL_Vent does not match the ordered state
+  if (FUEL_Vent.state != FUEL_Vent_Desired.state) {
+    // Store current state into previous state
+    FUEL_Vent_Prev = FUEL_Vent.state;
+    // Write the new state to the pin
+    digitalWrite(FUEL_Vent_ACTPIN, FUEL_Vent_Desired.state);
+    // Track the state change to send a notification to Pi
+    STATE_CHANGED = true;
+  }
+  // If LOX_Vent does not match the ordered state
+  if (LOX_Vent.state != LOX_Vent_Desired.state) {
+    // Store current state into previous state
+    LOX_Vent_Prev = LOX_Vent.state;
+    // Write the new state to the pin
+    digitalWrite(LOX_Vent_ACTPIN, LOX_Vent_Desired.state);
+    // Track the state change to send a notification to Pi
+    STATE_CHANGED = true;
+  }
+  // If MAIN does not match the ordered state
+  if (MAIN.state != MAIN_Desired.state) {
+    // Store current state into previous state
+    MAIN_Prev = MAIN.state;
+    // Write the new state to the pin
+    digitalWrite(MAIN_ACTPIN, MAIN_Desired.state);
+    // Track the state change to send a notification to Pi
+    STATE_CHANGED = true;
+  }
+  // If FUEL_Purge does not match the ordered state
+  if (FUEL_Purge.state != FUEL_Purge_Desired.state) {
+    // Store current state into previous state
+    FUEL_Purge_Prev = FUEL_Purge.state;
+    // Write the new state to the pin
+    digitalWrite(FUEL_Purge_ACTPIN, FUEL_Purge_Desired.state);
+    // Track the state change to send a notification to Pi
+    STATE_CHANGED = true;
+  }
+  // If FUEL_Purge does not match the ordered state
+  if (LOX_Purge.state != LOX_Purge_Desired.state) {
+    // Store current state into previous state
+    LOX_Purge_Prev = LOX_Purge.state;
+    // Write the new state to the pin
+    digitalWrite(LOX_Purge_ACTPIN, LOX_Purge_Desired.state);
+    // Track the state change to send a notification to Pi
+    STATE_CHANGED = true;
+  }
+}
+
+void SendUpdate() {
+  if (STATE_CHANGED) {
+    // Serial Writes
+    // Writing the Packet Start bytestring to the Serial Buffer
+    Serial.write(Packet_Start.bytes,4);
+
+    // Writing the Timestamp to the Serial Buffer
+    Serial.write(TimeStamp.bytes, 4);
   
+    // Writing the actuator states to the Serial Buffer
+    Serial.write(FUEL_Press.bytes, 1);
+    Serial.write(LOX_Press.bytes, 1);
+    Serial.write(FUEL_Vent.bytes, 1);
+    Serial.write(LOX_Vent.bytes, 1);
+    Serial.write(MAIN.bytes, 1);
+    Serial.write(FUEL_Purge.bytes, 1);
+    Serial.write(LOX_Purge.bytes, 1);
+
+    // Writing the Packet Stop bytestring to the Serial Buffer
+    Serial.write(Terminator.bytes, 4);
+    STATE_CHANGED = false;
+  }
 }

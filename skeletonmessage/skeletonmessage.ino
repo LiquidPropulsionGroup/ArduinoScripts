@@ -78,7 +78,6 @@ void loop() {
   FT_Thrust.int_dat = 500;//random(0,500);
   FL_WATER.int_dat = 250;//radnom(0,500);
 
-
   // Serial Writes
   // Writing the Packet Start bytestring to the Serial Buffer
   Serial.write(Packet_Start.bytes,4);

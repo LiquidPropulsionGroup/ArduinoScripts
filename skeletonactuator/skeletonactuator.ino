@@ -147,7 +147,6 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // Pull the timestamp at the start of the loop
-//  Serial.write(Packet_Start.bytes,4);
   TimeStamp.int_dat = millis();
 //  Serial.println("READ DATA");
   ReceiveData();
@@ -177,10 +176,10 @@ void ReceiveData() {
   char Terminator = '>';
   char ReceivedChar;
   MESSAGE_GOOD = false;
-  Serial.println(ReceivedChars);
-  Serial.println("Receive Data:");
-  Serial.println(Serial.available());
-  Serial.println(MessageIndex);
+//  Serial.println(ReceivedChars);
+//  Serial.println("Receive Data:");
+//  Serial.println(Serial.available());
+//  Serial.println(MessageIndex);
   if (Serial.available() > 0) {
 
 //move everything back by 1 index and read the next byte into the last index
@@ -188,107 +187,31 @@ void ReceiveData() {
           ReceivedChars[i] = ReceivedChars[i+1];
       }
       ReceivedChars[MESSAGE_LENGTH+1] = Serial.read();
-      Serial.println(ReceivedChars);
+//      Serial.println(ReceivedChars);
       //validate
       if (ReceivedChars[0] != Starter) {
-        Serial.println("IMPROPER START CHAR, DISCARD");
+//        Serial.println("IMPROPER START CHAR, DISCARD");
         return;
       }else if (ReceivedChars[MESSAGE_LENGTH+1] != Terminator) {
-        Serial.println("IMPROPER END CHAR, DISCARD");
+//        Serial.println("IMPROPER END CHAR, DISCARD");
         return;
       } else {
         for (int i = 0; i < MESSAGE_LENGTH; i += 2) {
           if (ReceivedChars[i+1] != InstructionTemplate[i]) {
-            Serial.println("Identifiers malformed");
+//            Serial.println("Identifiers malformed");
             return;
           }
           if (ReceivedChars[i+2] != '1' && ReceivedChars[i+2] != '0') {
-            Serial.println("States malformed");
+//            Serial.println("States malformed");
             return;
           }
         }
       }
-      Serial.println("MESSAGE GOOD");
+//      Serial.println("MESSAGE GOOD");
       MESSAGE_GOOD = true;
   }
 
-  Serial.println(ReceivedChars);
-  
-
-//  Serial.println("Receive Data:");
-//  Serial.println(Serial.available());
-//  Serial.println(MessageIndex);
-//  if (Serial.available() > 15) {
-//    while (MessageIndex != 16) {
-//      // Keep reading
-//      ReceivedChar = Serial.read();
-//      Serial.println("WHILE...");
-//      Serial.println(ReceivedChars);
-//      Serial.println(MessageIndex);
-//      // Check for starter and terminator in proper position 
-//      if (MessageIndex == 0 && ReceivedChar != Starter) {
-//        Serial.println("IMPROPER START CHAR, DISCARD");
-//        break;
-//      } else if (MessageIndex == 15 && ReceivedChar != Terminator) {
-//        Serial.println("IMPROPER END CHAR, DISCARD");
-//        break;
-//      } else if (MessageIndex == 15) {
-//        Serial.print("Message length: ");
-//        Serial.println(MESSAGE_LENGTH);
-//        for (int i = 0; i < MESSAGE_LENGTH; i += 2) {
-//          Serial.println(i);
-//          if (ReceivedChars[i+1] != InstructionTemplate[i]) {
-//            
-//            Serial.println(ReceivedChars[i+1]);
-//            Serial.println(InstructionTemplate[i]);
-//            for ( int a = 0; a < sizeof(ReceivedChars);  a++ ) {
-//              ReceivedChars[a] = (char)0;
-//            }
-//            MessageIndex = 0;
-//            return;
-//          }
-//        }
-//      }
-//      ReceivedChars[MessageIndex] = ReceivedChar;
-//      MessageIndex++;
-//    }
-//  MessageIndex = 0;
-//  }
-//  Serial.write(ReceivedChars, 16);
 //  Serial.println(ReceivedChars);
-
-
-
-//  while (Serial.available() > 0 && NewData == false) {
-//    // Read in a new character
-//    ReceivedChar = Serial.read();
-////    Serial.print(ReceivedChar);
-//    // If it belongs to a message being read
-//    if (ReceiveInProgress == true) {
-//      // and isn't a terminator character
-//      if (ReceivedChar != Terminator) {
-//          // Add it to the message to be parsed later
-//          ReceivedChars[MessageIndex] = ReceivedChar;
-//          // Increment the message index
-//          MessageIndex++;
-//          if (MessageIndex >= MESSAGE_LENGTH) {
-//            MessageIndex = MESSAGE_LENGTH - 1;
-//          }
-//        } else {
-//          // If it is a terminator character terminate the string
-////          Serial.println("TERMINATOR RECEIVED");
-//          // and update the control variables to intake a new message
-//          ReceiveInProgress = false;
-//          MessageIndex = 0;
-//          NewData = true;
-//        }
-//    } else if (ReceivedChar == Starter) {
-//      // If not currently receiving a new message, and the character is the starter character
-//      // Update the control variable to start reading a new message
-//      Serial.println("NEW MESSAGE");
-//      ReceiveInProgress = true;
-//    }
-//  }
 }
 
 void ParseMessage() {
@@ -432,28 +355,25 @@ void SendUpdate() {
     MAIN_Send = BoolToByte(MAIN);
     FUEL_Purge_Send = BoolToByte(FUEL_Purge);
     LOX_Purge_Send = BoolToByte(LOX_Purge);
-
-//    Serial.println("=====SEND=====");
-//    Serial.println(FUEL_Press_Send);
     
     // Serial Writes
     // Writing the Packet Start bytestring to the Serial Buffer
-    
+    Serial.write(Packet_Start.bytes,4);
 
     // Writing the Timestamp to the Serial Buffer
-//    Serial.write(TimeStamp.bytes, 4);
+    Serial.write(TimeStamp.bytes, 4);
   
     // Writing the actuator states to the Serial Buffer
-//    Serial.write(FUEL_Press_Send);
-//    Serial.write(LOX_Press_Send);
-//    Serial.write(FUEL_Vent_Send);
-//    Serial.write(LOX_Vent_Send);
-//    Serial.write(MAIN_Send);
-//    Serial.write(FUEL_Purge_Send);
-//    Serial.write(LOX_Purge_Send);
+    Serial.write(FUEL_Press_Send);
+    Serial.write(LOX_Press_Send);
+    Serial.write(FUEL_Vent_Send);
+    Serial.write(LOX_Vent_Send);
+    Serial.write(MAIN_Send);
+    Serial.write(FUEL_Purge_Send);
+    Serial.write(LOX_Purge_Send);
 
     // Writing the Packet Stop bytestring to the Serial Buffer
-//    Serial.write(Terminator.bytes, 4);
+    Serial.write(Terminator.bytes, 4);
     STATE_CHANGED = false;
   }
 }

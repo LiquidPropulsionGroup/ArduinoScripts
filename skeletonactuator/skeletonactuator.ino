@@ -336,7 +336,7 @@ void VerifyStates() {
 }
 
 void SendUpdate() {
-  if (STATE_CHANGED) {
+  //if (STATE_CHANGED) {
 //    Serial.println("STATE CHANGED");
     // Check the current status
     FUEL_Press = digitalRead(FUEL_Press_READPIN);
@@ -375,7 +375,7 @@ void SendUpdate() {
     // Writing the Packet Stop bytestring to the Serial Buffer
     Serial.write(Terminator.bytes, 4);
     STATE_CHANGED = false;
-  }
+  //}
 }
 
 char BoolToByte(const bool Boolean) {

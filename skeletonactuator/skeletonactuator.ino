@@ -68,7 +68,6 @@ bool LOX_Purge;
 // Global variables for receiving instructions over serial
 const int MESSAGE_LENGTH = 14;
 char ReceivedChars[MESSAGE_LENGTH+2];
-bool NewData;
 
 // Comparison Packet for verifying instruction messages
 // FUEL_Pres(S), LOX_Pres(s), FUEL_Ven(T), LOX_Ven(t), (M)ain, FUEL_Purg(E), FUEL_Purg(e)
@@ -85,7 +84,6 @@ bool MAIN_Desired;
 bool FUEL_Purge_Desired;
 bool LOX_Purge_Desired;
 
-bool ReceiveInProgress;
 bool MESSAGE_GOOD = false;
 
 void setup() {
@@ -123,11 +121,7 @@ void setup() {
   pinMode(MAIN_ACTPIN, OUTPUT);
   pinMode(FUEL_Purge_ACTPIN, OUTPUT);
   pinMode(LOX_Purge_ACTPIN, OUTPUT);
-
-//  LOX_Purge_Desired.state = true;
-//  ReceiveInProgress = false;
   
-
   // Initialize input pins for sensing actuator state
   pinMode(FUEL_Press_READPIN, INPUT);
   pinMode(LOX_Press_READPIN, INPUT);
@@ -157,7 +151,6 @@ void loop() {
   VerifyStates();
 //  Serial.println("SEND UPDATES");
   SendUpdate();
-  NewData = false;
   FUEL_Press = digitalRead(FUEL_Press_READPIN);
   LOX_Press = digitalRead(LOX_Press_READPIN);
   FUEL_Vent = digitalRead(FUEL_Vent_READPIN);
@@ -170,7 +163,6 @@ void loop() {
 
 void ReceiveData() {
   // Control variables
-//  static bool ReceiveInProgress = false;
   static byte MessageIndex = 0;
   char Starter = '<';
   char Terminator = '>';
@@ -215,11 +207,6 @@ void ReceiveData() {
 }
 
 void ParseMessage() {
-  // Control vars
-  static int VerifiedCount = 0;
-  
-  // Pull the message apart into components
-  
   // Pull the instructions out of the message
   // Update the desired states list
 //    Serial.println("MESSAGE GOOD");

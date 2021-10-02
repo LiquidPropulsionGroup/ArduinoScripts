@@ -8,6 +8,7 @@
 #include <Wire.h>           // Enables I2C
 #include <stdint.h>         // Enables strict byte-size of variable types
 #include <HardwareSerial.h> // Enables Serial.read() to grab 1 char from the buffer
+#include <Regexp.h>         // Enables regex
 
 // Union declarations
 typedef union FourBytes{
@@ -135,10 +136,12 @@ void setup() {
 
 void loop() {
   // Sensor reading, packaging, and sending
-  SensorMessage();
+//  SensorMessage();
 
   // Valve control and status update sending
   ValveControl();
+
+  delay(100);
 }
 
 
@@ -260,6 +263,7 @@ void ReceiveData() {
   // Control Variables
   const char Starter = '<';
   const char Terminator = '>';
+  const char STAT_UPDATE = '?';
   static char ReceivedChar;
 
   // For new messages, assume it is incomplete
@@ -283,20 +287,30 @@ void ReceiveData() {
       // It it isn't, return out of the function without setting MESSAGE_GOOD = true
       return;
     } else {
-      // If it does have a valid start and end character, analyze the contents
-      // These should match the identifier characters in InstructionTemplate
-      // Step through the received message checking every other character
-      for (int i = 0; i < INSTRUCTION_LENGTH; i +=2) {
-        // and check that it matches the instruction template
-        if ( ReceivedChars[i+1] != InstructionTemplate[i] ) {
-          // If it doesn't, return out of the function without setting MESSAGE_GOOD = true
-          return;
-        }
-        // Also check the next character is either a '1' (True) or a '0' (False)
-        if ( ReceivedChars[i+2] != '1' && ReceivedChars[i+2]  != '0' ) {
-          // It it doesn't, return out of the function without setting MESSAGE_GOOD = true
-          return;
-        }
+      // Perform regex on the received message
+      static MatchState ms;
+      ms.Target( ReceivedChars );
+      // Check if the message is a status update request
+      char result = ms.Match ("(%?%?%?%?%?%?%?%?%?%?%?%?%?%?)");
+      Serial.println(result == REGEXP_NOMATCH);
+      if (result == REGEXP_MATCHED) {
+        // Status update request
+        SendUpdate();
+        Serial.println("STATUS UPDATE REQUEST");
+        return;
+      }
+      // Then check if the message is an instruction
+      result = ms.Match ("(S[01]s[01]T[01]t[01]M[01]E[01]e[01])");
+      if (result == REGEXP_MATCHED) {
+        // Matches template, allow MESSAGE_GOOD = true
+      }
+      else if (result == REGEXP_NOMATCH) {
+        // Does not match template, reject
+        return;
+      }
+      else {
+        // shit pant
+        return;
       }
     }
     // If the program gets past this point, it has passed all verification without returning
@@ -417,7 +431,8 @@ void SendUpdate() {
   // Writing the Packet Stop bytestring to the Serial Buffer
   Serial.write(Terminator.bytes, 4);
 
-  delay(1);
+  delay(2);
+}
 
 // Map boolean value to byte
 char BoolToByte(const bool Boolean) {

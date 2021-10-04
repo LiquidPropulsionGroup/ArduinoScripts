@@ -176,7 +176,7 @@ void SensorMessage() {
 
   // Static Delay
   // Needs to be larger than the byte-length of the message divided by the baud/10 for bytes/s
-  static int BUFFER_DELAY = 50;
+  static int BUFFER_DELAY = 10;
   
   // Values to be sent over serial
   TimeStamp.int_dat = millis();   //+16777217; //for testing
@@ -283,6 +283,7 @@ void ValveControl() {
 }
 
 void ReceiveData() {
+  DOGSHITDOODOOPOOPOO:
   // Control Variables
   const char Starter = '<';
   const char Terminator = '>';
@@ -302,10 +303,12 @@ void ReceiveData() {
     if ( ReceivedChars[0] != Starter ) {
       // Check that the first item is the starter character '<'
       // If it isn't, return out of the function without setting MESSAGE_GOOD = true
+      goto DOGSHITDOODOOPOOPOO;
       return;
     } else if ( ReceivedChars[INSTRUCTION_LENGTH+1] != Terminator ) {
       // Check that the last item is the terminator character '>'
       // It it isn't, return out of the function without setting MESSAGE_GOOD = true
+      goto DOGSHITDOODOOPOOPOO;
       return;
     } else {
       // Perform regex on the received message
@@ -316,6 +319,7 @@ void ReceiveData() {
       if (result == REGEXP_MATCHED) {
         // Status update request
         SendUpdate();
+        goto DOGSHITDOODOOPOOPOO;
         return;
       }
       // Then check if the message is an instruction
@@ -325,10 +329,12 @@ void ReceiveData() {
       }
       else if (result == REGEXP_NOMATCH) {
         // Does not match template, reject
+        goto DOGSHITDOODOOPOOPOO;
         return;
       }
       else {
         // shit pant
+        goto DOGSHITDOODOOPOOPOO;
         return;
       }
     }
@@ -464,7 +470,7 @@ void SendUpdate() {
 
   Serial.write(ValveDataMessage, 19);
 
-  delay(50);
+  delay(5);
 }
 
 // Map boolean value to byte

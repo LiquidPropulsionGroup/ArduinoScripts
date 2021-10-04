@@ -82,6 +82,9 @@ FourBytes Terminator;
 // Gatekeeping variable, allows updating ACTPINs and sending a return message to the Pi
   bool MESSAGE_GOOD = false;
 
+  char SensorDataMessage[40];
+  char ValveDataMessage[19];
+
 void setup() {
   // put your setup code here, to run once:
   { // Initialize serial communications
@@ -131,17 +134,18 @@ void setup() {
     // Force all states to the defaults
     VerifyStates();
   }
-  
+  memcpy(&SensorDataMessage[0], Packet_Start.bytes, 4);
+  memcpy(&SensorDataMessage[36], Terminator.bytes, 4);
+  memcpy(&ValveDataMessage[0], Packet_Start.bytes, 4);
+  memcpy(&ValveDataMessage[15], Terminator.bytes, 4);
 }
 
 void loop() {
   // Sensor reading, packaging, and sending
-//  SensorMessage();
+  SensorMessage();
 
   // Valve control and status update sending
   ValveControl();
-
-  delay(100);
 }
 
 
@@ -167,9 +171,12 @@ void SensorMessage() {
   static TwoBytes FL_WATER;
 //  FourBytes Terminator;
 
+  
+  
+
   // Static Delay
   // Needs to be larger than the byte-length of the message divided by the baud/10 for bytes/s
-  static int BUFFER_DELAY = 5;
+  static int BUFFER_DELAY = 50;
   
   // Values to be sent over serial
   TimeStamp.int_dat = millis();   //+16777217; //for testing
@@ -190,41 +197,57 @@ void SensorMessage() {
   FT_Thrust.int_dat = 500;//random(0,500);
   FL_WATER.int_dat = 250;//radnom(0,500);
 
-  // Serial Writes
-  // Writing the Packet Start bytestring to the Serial Buffer
-  Serial.write(Packet_Start.bytes,4);
+    // Assign each data point to its spot in the message array
+//  SensorMessage[4] = TimeStamp.bytes[0];
+//  SensorMessage[5] = TimeStamp.bytes[1];
+//  SensorMessage[6] = TimeStamp.bytes[2];
+//  SensorMessage[7] = TimeStamp.bytes[3];
+    memcpy(&SensorDataMessage[4],TimeStamp.bytes, 4);
+//  SensorMessage[8] = PT_HE.bytes[0];
+//  SensorMessage[9] = PT_HE.bytes[1];
+    memcpy(&SensorDataMessage[8],PT_HE.bytes, 2);
+//  SensorMessage[10] = PT_Purge.bytes[0];
+//  SensorMessage[11] = PT_Purge.bytes[1];
+    memcpy(&SensorDataMessage[10],PT_Purge.bytes, 2);
+//  SensorMessage[12] = PT_Pneu.bytes[0];
+//  SensorMessage[13] = PT_Pneu.bytes[1];
+    memcpy(&SensorDataMessage[12],PT_Pneu.bytes, 2);
+//  SensorMessage[14] = PT_FUEL_PV.bytes[0];
+//  SensorMessage[15] = PT_FUEL_PV.bytes[1];
+    memcpy(&SensorDataMessage[14],PT_FUEL_PV.bytes, 2);
+//  SensorMessage[16] = PT_LOX_PV.bytes[0];
+//  SensorMessage[17] = PT_LOX_PV.bytes[1];
+    memcpy(&SensorDataMessage[16],PT_LOX_PV.bytes, 2);
+//  SensorMessage[18] = PT_CHAM.bytes[0];
+//  SensorMessage[19] = PT_CHAM.bytes[1];
+    memcpy(&SensorDataMessage[18],PT_CHAM.bytes, 2);
+//  SensorMessage[20] = TC_FUEL_PV.bytes[0];
+//  SensorMessage[21] = TC_FUEL_PV.bytes[1];
+    memcpy(&SensorDataMessage[20],TC_FUEL_PV.bytes, 2);
+//  SensorMessage[22] = TC_LOX_PV.bytes[0];
+//  SensorMessage[23] = TC_LOX_PV.bytes[1];
+    memcpy(&SensorDataMessage[22],TC_LOX_PV.bytes, 2);
+//  SensorMessage[24] = TC_LOX_Valve_Main.bytes[0];
+//  SensorMessage[25] = TC_LOX_Valve_Main.bytes[1];
+    memcpy(&SensorDataMessage[24],TC_LOX_Valve_Main.bytes, 2);
+//  SensorMessage[26] = TC_WATER_In.bytes[0];
+//  SensorMessage[27] = TC_WATER_In.bytes[1];
+    memcpy(&SensorDataMessage[26],TC_WATER_In.bytes, 2);
+//  SensorMessage[28] = TC_WATER_Out.bytes[0];
+//  SensorMessage[29] = TC_WATER_Out.bytes[1];
+    memcpy(&SensorDataMessage[28],TC_WATER_Out.bytes, 2);
+//  SensorMessage[30] = TC_CHAM.bytes[0];
+//  SensorMessage[31] = TC_CHAM.bytes[1];
+    memcpy(&SensorDataMessage[30],TC_CHAM.bytes, 2);
+//  SensorMessage[32] = FT_Thrust.bytes[0];
+//  SensorMessage[33] = FT_Thrust.bytes[1];
+    memcpy(&SensorDataMessage[32],FT_Thrust.bytes, 2);
+//  SensorMessage[34] = FL_WATER.bytes[0];
+//  SensorMessage[35] = FL_WATER.bytes[1];
+    memcpy(&SensorDataMessage[34],FL_WATER.bytes, 2);
 
-  // Writing the Timestamp to the Serial Buffer
-  Serial.write(TimeStamp.bytes, 4);
-
-  // Writing PT Data to the Serial Buffer
-  Serial.write(PT_HE.bytes, 2);
-  Serial.write(PT_Purge.bytes, 2);
-  Serial.write(PT_Pneu.bytes, 2);
-  Serial.write(PT_FUEL_PV.bytes, 2);
-  Serial.write(PT_LOX_PV.bytes, 2);
-  //Serial.write(PT_FUEL_INJ.bytes, 2);
-  Serial.write(PT_CHAM.bytes, 2);
-
-  // Writing TC Data to the Serial Buffer
-  Serial.write(TC_FUEL_PV.bytes, 2);
-  Serial.write(TC_LOX_PV.bytes, 2);
-  Serial.write(TC_LOX_Valve_Main.bytes, 2);
-  Serial.write(TC_WATER_In.bytes, 2);
-  Serial.write(TC_WATER_Out.bytes, 2);
-  Serial.write(TC_CHAM.bytes, 2);
-
-  // Writing RC Data to the Serial Buffer
-  //Serial.write(RC_LOX_Level.bytes, 2);
-
-  // Writing FT Data to the Serial Buffer
-  Serial.write(FT_Thrust.bytes, 2);
-
-  // Writing FL Data to the Serial Buffer
-  Serial.write(FL_WATER.bytes, 2);
-
-  // Writing the Packet Stop bytestring to the Serial Buffer
-  Serial.write(Terminator.bytes, 4);
+  // Send the array
+  Serial.write(SensorDataMessage, 40);
 
   // Configurable delay
   delay(BUFFER_DELAY);
@@ -264,7 +287,6 @@ void ReceiveData() {
   const char Starter = '<';
   const char Terminator = '>';
   const char STAT_UPDATE = '?';
-  static char ReceivedChar;
 
   // For new messages, assume it is incomplete
   MESSAGE_GOOD = false;
@@ -276,7 +298,6 @@ void ReceiveData() {
       ReceivedChars[i] = ReceivedChars[i+1];
     }
     ReceivedChars[INSTRUCTION_LENGTH+1] = Serial.read();
-    Serial.println(ReceivedChars);
     // Validate the entirety of the rolling buffer sequentially...
     if ( ReceivedChars[0] != Starter ) {
       // Check that the first item is the starter character '<'
@@ -292,11 +313,9 @@ void ReceiveData() {
       ms.Target( ReceivedChars );
       // Check if the message is a status update request
       char result = ms.Match ("(%?%?%?%?%?%?%?%?%?%?%?%?%?%?)");
-      Serial.println(result == REGEXP_NOMATCH);
       if (result == REGEXP_MATCHED) {
         // Status update request
         SendUpdate();
-        Serial.println("STATUS UPDATE REQUEST");
         return;
       }
       // Then check if the message is an instruction
@@ -414,24 +433,38 @@ void SendUpdate() {
 
   // Write the full timestamped states to the buffer
   // Writing the Packet Start bytestring to the Serial Buffer
-  Serial.write(Packet_Start.bytes,4);
 
-  // Writing the Timestamp to the Serial Buffer
-  Serial.write(TimeStamp.bytes, 4);
-  
-  // Writing the actuator states to the Serial Buffer
-  Serial.write(FUEL_Press_Send);
-  Serial.write(LOX_Press_Send);
-  Serial.write(FUEL_Vent_Send);
-  Serial.write(LOX_Vent_Send);
-  Serial.write(MAIN_Send);
-  Serial.write(FUEL_Purge_Send);
-  Serial.write(LOX_Purge_Send);
 
-  // Writing the Packet Stop bytestring to the Serial Buffer
-  Serial.write(Terminator.bytes, 4);
+//  // Writing the Timestamp to the Serial Buffer
+//  Serial.write(TimeStamp.bytes, 4);
+//  
+//  // Writing the actuator states to the Serial Buffer
+//  Serial.write(FUEL_Press_Send);
+//  Serial.write(LOX_Press_Send);
+//  Serial.write(FUEL_Vent_Send);
+//  Serial.write(LOX_Vent_Send);
+//  Serial.write(MAIN_Send);
+//  Serial.write(FUEL_Purge_Send);
+//  Serial.write(LOX_Purge_Send);
+//
+//  // Writing the Packet Stop bytestring to the Serial Buffer
+//  Serial.write(Terminator.bytes, 4);
+//  Serial.write(Packet_Start.bytes,4);
 
-  delay(2);
+//  delay(2);
+
+  memcpy(&ValveDataMessage[4], TimeStamp.bytes, 4);
+  memcpy(&ValveDataMessage[8], &FUEL_Press_Send, 1);
+  memcpy(&ValveDataMessage[9], &LOX_Press_Send, 1);
+  memcpy(&ValveDataMessage[10], &FUEL_Vent_Send, 1);
+  memcpy(&ValveDataMessage[11], &LOX_Vent_Send, 1);
+  memcpy(&ValveDataMessage[12], &MAIN_Send, 1);
+  memcpy(&ValveDataMessage[13], &FUEL_Purge_Send, 1);
+  memcpy(&ValveDataMessage[14], &LOX_Purge_Send, 1);
+
+  Serial.write(ValveDataMessage, 19);
+
+  delay(50);
 }
 
 // Map boolean value to byte

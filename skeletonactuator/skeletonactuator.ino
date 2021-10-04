@@ -1,9 +1,10 @@
 //SKELETON CODE FOR ACTUATING AND TRANSMITTING STATE
 //Thomas W. C. Carlson
 
-#include <Wire.h>
-#include <stdint.h>
-#include <HardwareSerial.h>
+#include <Wire.h>               // Enables I2C
+#include <stdint.h>             // Enables strict byte-size of variable types
+#include <HardwareSerial.h>     // Enables Serial.read
+#include <Regexp.h>             // Enables regex
 
 // Pin Declarations
 int FUEL_Press_ACTPIN = 13;
@@ -32,8 +33,6 @@ typedef union FourBytes{
 // For sending status updates
 FourBytes Packet_Start;
 
-FourBytes TimeStamp;
-
 char FUEL_Press_Send;
 char LOX_Press_Send;
 char FUEL_Vent_Send;
@@ -44,17 +43,12 @@ char LOX_Purge_Send;
 
 FourBytes Terminator;
 
-static int BUFFER_DELAY = 5;
+const int VALVE_MESSAGE_LENGTH = 15;
+char ValveDataMessage[VALVE_MESSAGE_LENGTH];
 
-// Global variables for storing previous state values
-bool FUEL_Press_Prev;
-bool LOX_Press_Prev;
-bool FUEL_Vent_Prev;
-bool LOX_Vent_Prev;
-bool MAIN_Prev;
-bool FUEL_Purge_Prev;
-bool LOX_Purge_Prev;
-bool STATE_CHANGED;
+// Thereotically 1.3ms
+// Practically has to be found empirically
+static int BUFFER_DELAY = 5;
 
 // Global variables for storing current state values
 bool FUEL_Press;
@@ -94,6 +88,10 @@ void setup() {
   Packet_Start.int_dat = 0;
   Terminator.int_dat = pow(2,32)-1;   //4294967295;
 
+  // Initialize the unchanging parts of the valve message
+  memcpy(&ValveDataMessage[0], Packet_Start.bytes, 4);
+  memcpy(&ValveDataMessage[11], Terminator.bytes, 4);
+
   // Initialize the normally <open/closed> behavior of the actuators
   FUEL_Press_Desired = false;           // NORMALLY CLOSED
   LOX_Press_Desired = false;            // NORMALLY CLOSED
@@ -102,16 +100,6 @@ void setup() {
   MAIN_Desired = false;                 // NORMALLY CLOSED
   FUEL_Purge_Desired = false;           // NORMALLY CLOSED
   LOX_Purge_Desired = false;            // NORMALLY CLOSED
-
-  // Initialize the previous <open/closed> state information
-  FUEL_Press_Prev = FUEL_Press;
-  LOX_Press_Prev = LOX_Press;
-  FUEL_Vent_Prev = FUEL_Vent;
-  LOX_Vent_Prev = LOX_Vent;
-  MAIN_Prev = MAIN;
-  FUEL_Purge_Prev = FUEL_Purge;
-  LOX_Purge_Prev = LOX_Purge;
-  STATE_CHANGED = false;
 
   // Initialize output pins
   pinMode(FUEL_Press_ACTPIN, OUTPUT);
@@ -141,76 +129,71 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // Pull the timestamp at the start of the loop
-  TimeStamp.int_dat = millis();
-//  Serial.println("READ DATA");
   ReceiveData();
   if (MESSAGE_GOOD == true) {
-//  Serial.println("PARSE DATA");
-  ParseMessage();
-//  Serial.println("VERIFY STATES");
-  VerifyStates();
-//  Serial.println("SEND UPDATES");
-  SendUpdate();
-  FUEL_Press = digitalRead(FUEL_Press_READPIN);
-  LOX_Press = digitalRead(LOX_Press_READPIN);
-  FUEL_Vent = digitalRead(FUEL_Vent_READPIN);
-  LOX_Vent = digitalRead(LOX_Vent_READPIN);
-  MAIN = digitalRead(MAIN_READPIN);
-  FUEL_Purge = digitalRead(FUEL_Purge_READPIN);
-  LOX_Purge = digitalRead(LOX_Purge_READPIN);
+    ParseMessage();
+    VerifyStates();
+    SendUpdate();
   }
 }
 
 void ReceiveData() {
+  // Label for resetting the reads
+  READ_RESET: 
   // Control variables
   static byte MessageIndex = 0;
   char Starter = '<';
   char Terminator = '>';
   char ReceivedChar;
   MESSAGE_GOOD = false;
-//  Serial.println(ReceivedChars);
-//  Serial.println("Receive Data:");
-//  Serial.println(Serial.available());
-//  Serial.println(MessageIndex);
+  
   if (Serial.available() > 0) {
-
-//move everything back by 1 index and read the next byte into the last index
+    // move everything back by 1 index and read the next byte into the last index
       for(int i = 0; i < MESSAGE_LENGTH+1 /*All but the last character*/;i++){
           ReceivedChars[i] = ReceivedChars[i+1];
       }
       ReceivedChars[MESSAGE_LENGTH+1] = Serial.read();
-//      Serial.println(ReceivedChars);
-      //validate
+      // Validate
       if (ReceivedChars[0] != Starter) {
-//        Serial.println("IMPROPER START CHAR, DISCARD");
-        return;
+        // First check that the first character is a message starter
+        goto READ_RESET;
       }else if (ReceivedChars[MESSAGE_LENGTH+1] != Terminator) {
-//        Serial.println("IMPROPER END CHAR, DISCARD");
-        return;
+        // Check that the last character in the buffer is a message terminator
+        goto READ_RESET;
       } else {
-        for (int i = 0; i < MESSAGE_LENGTH; i += 2) {
-          if (ReceivedChars[i+1] != InstructionTemplate[i]) {
-//            Serial.println("Identifiers malformed");
-            return;
-          }
-          if (ReceivedChars[i+2] != '1' && ReceivedChars[i+2] != '0') {
-//            Serial.println("States malformed");
-            return;
-          }
+        // Perform regex on the received message
+        static MatchState ms;
+        ms.Target( ReceivedChars );
+        // Check if the message is a status update request
+        char result = ms.Match ("(%?%?%?%?%?%?%?%?%?%?%?%?%?%?)");
+        if (result == REGEXP_MATCHED) {
+          // Status update request
+          SendUpdate();
+          goto READ_RESET;
+        }
+        // Then check if the message is an instruction
+        result = ms.Match ("(S[01]s[01]T[01]t[01]M[01]E[01]e[01])");
+        if (result == REGEXP_MATCHED) {
+          // Matches template, allow MESSAGE_GOOD = true
+        }
+        else if (result == REGEXP_NOMATCH) {
+          // Does not match template, reject
+          goto READ_RESET;
+        }
+        else {
+          // shit pant
+          goto READ_RESET;
         }
       }
-//      Serial.println("MESSAGE GOOD");
+      // If no gotos are executed, the message is correct and can be used
       MESSAGE_GOOD = true;
   }
-
-//  Serial.println(ReceivedChars);
 }
 
 void ParseMessage() {
   // Pull the instructions out of the message
-  // Update the desired states list
-//    Serial.println("MESSAGE GOOD");
-  // Map FUEL_Press request to boolean
+  // '1' needs to be mapped to True
+  // '0' needs to be mapped to False
   FUEL_Press_Desired = ByteToBool(ReceivedChars[2]);
   LOX_Press_Desired = ByteToBool(ReceivedChars[4]);
   FUEL_Vent_Desired = ByteToBool(ReceivedChars[6]);
@@ -218,14 +201,8 @@ void ParseMessage() {
   MAIN_Desired = ByteToBool(ReceivedChars[10]);
   FUEL_Purge_Desired = ByteToBool(ReceivedChars[12]);
   LOX_Purge_Desired = ByteToBool(ReceivedChars[14]);
-//    Serial.print(FUEL_Press_Desired);
-//    Serial.print(LOX_Press_Desired);
-//    Serial.print(FUEL_Vent_Desired);
-//    Serial.print(LOX_Vent_Desired);
-//    Serial.print(MAIN_Desired);
-//    Serial.print(FUEL_Purge_Desired);
-//    Serial.print(LOX_Purge_Desired);
-    // And prepare to read a new message
+  
+  // With the data extracted, prepare to read a new instruction
   MESSAGE_GOOD = false;
 }
 
@@ -238,93 +215,54 @@ void VerifyStates() {
   LOX_Vent = digitalRead(LOX_Vent_READPIN);
   MAIN = digitalRead(MAIN_READPIN);
   FUEL_Purge = digitalRead(FUEL_Purge_READPIN);
-  LOX_Purge = digitalRead(LOX_Purge_READPIN); 
-
-//  Serial.println("=====DESIRED STATES=====");
-//  Serial.println(FUEL_Press_Desired);
-//  Serial.println(LOX_Press_Desired);
-//  Serial.println(FUEL_Vent_Desired);
-//  Serial.println(LOX_Vent_Desired);
-//  Serial.println(MAIN_Desired);
-//  Serial.println(FUEL_Purge_Desired);
-//  Serial.println(LOX_Purge_Desired);
+  LOX_Purge = digitalRead(LOX_Purge_READPIN);
 
   // Compare the read states to the desired states and set them to be equal to the desired
+  
   // If FUEL_Press does not match the ordered state
   if (FUEL_Press != FUEL_Press_Desired) {
-//    Serial.println("CHANGE FUEL PRESS");
-    // Store current state into previous state
-    FUEL_Press_Prev = FUEL_Press;
     // Write the new state to the pin
     digitalWrite(FUEL_Press_ACTPIN, FUEL_Press_Desired);
-    // Track the state change to send a notification to Pi
-    STATE_CHANGED = true;
   }
+  
   // If LOX_Press does not match the ordered state
   if (LOX_Press != LOX_Press_Desired) {
-//    Serial.println("CHANGE LOX PRESS");
-    // Store current state into previous state
-    LOX_Press_Prev = LOX_Press;
     // Write the new state to the pin
     digitalWrite(LOX_Press_ACTPIN, LOX_Press_Desired);
-    // Track the state change to send a notification to Pi
-    STATE_CHANGED = true;
   }
+  
   // If FUEL_Vent does not match the ordered state
   if (FUEL_Vent != FUEL_Vent_Desired) {
-//    Serial.println("CHANGE FUEL VENT");
-    // Store current state into previous state
-    FUEL_Vent_Prev = FUEL_Vent;
     // Write the new state to the pin
     digitalWrite(FUEL_Vent_ACTPIN, FUEL_Vent_Desired);
-    // Track the state change to send a notification to Pi
-    STATE_CHANGED = true;
   }
+  
   // If LOX_Vent does not match the ordered state
   if (LOX_Vent != LOX_Vent_Desired) {
-//    Serial.println("CHANGE LOX VENT");
-    // Store current state into previous state
-    LOX_Vent_Prev = LOX_Vent;
     // Write the new state to the pin
     digitalWrite(LOX_Vent_ACTPIN, LOX_Vent_Desired);
-    // Track the state change to send a notification to Pi
-    STATE_CHANGED = true;
   }
+  
   // If MAIN does not match the ordered state
   if (MAIN != MAIN_Desired) {
-//    Serial.println("CHANGE MAIN");
-    // Store current state into previous state
-    MAIN_Prev = MAIN;
     // Write the new state to the pin
     digitalWrite(MAIN_ACTPIN, MAIN_Desired);
-    // Track the state change to send a notification to Pi
-    STATE_CHANGED = true;
   }
+  
   // If FUEL_Purge does not match the ordered state
   if (FUEL_Purge != FUEL_Purge_Desired) {
-//    Serial.println("CHANGE FUEL PURGE");
-    // Store current state into previous state
-    FUEL_Purge_Prev = FUEL_Purge;
     // Write the new state to the pin
     digitalWrite(FUEL_Purge_ACTPIN, FUEL_Purge_Desired);
-    // Track the state change to send a notification to Pi
-    STATE_CHANGED = true;
   }
+  
   // If FUEL_Purge does not match the ordered state
   if (LOX_Purge != LOX_Purge_Desired) {
-//    Serial.println("CHANGE LOX PURGE");
-    // Store current state into previous state
-    LOX_Purge_Prev = LOX_Purge;
     // Write the new state to the pin
     digitalWrite(LOX_Purge_ACTPIN, LOX_Purge_Desired);
-    // Track the state change to send a notification to Pi
-    STATE_CHANGED = true;
   }
 }
 
 void SendUpdate() {
-  //if (STATE_CHANGED) {
-//    Serial.println("STATE CHANGED");
     // Check the current status
     FUEL_Press = digitalRead(FUEL_Press_READPIN);
     LOX_Press = digitalRead(LOX_Press_READPIN);
@@ -344,25 +282,20 @@ void SendUpdate() {
     LOX_Purge_Send = BoolToByte(LOX_Purge);
     
     // Serial Writes
-    // Writing the Packet Start bytestring to the Serial Buffer
-    Serial.write(Packet_Start.bytes,4);
-
-    // Writing the Timestamp to the Serial Buffer
-    Serial.write(TimeStamp.bytes, 4);
-  
     // Writing the actuator states to the Serial Buffer
-    Serial.write(FUEL_Press_Send);
-    Serial.write(LOX_Press_Send);
-    Serial.write(FUEL_Vent_Send);
-    Serial.write(LOX_Vent_Send);
-    Serial.write(MAIN_Send);
-    Serial.write(FUEL_Purge_Send);
-    Serial.write(LOX_Purge_Send);
+    memcpy(&ValveDataMessage[4], &FUEL_Press_Send, 1);
+    memcpy(&ValveDataMessage[5], &LOX_Press_Send, 1);
+    memcpy(&ValveDataMessage[6], &FUEL_Vent_Send, 1);
+    memcpy(&ValveDataMessage[7], &LOX_Vent_Send, 1);
+    memcpy(&ValveDataMessage[8], &MAIN_Send, 1);
+    memcpy(&ValveDataMessage[9], &FUEL_Purge_Send, 1);
+    memcpy(&ValveDataMessage[10], &LOX_Purge_Send, 1);
 
-    // Writing the Packet Stop bytestring to the Serial Buffer
-    Serial.write(Terminator.bytes, 4);
-    STATE_CHANGED = false;
-  //}
+    // Write the array to the serial buffer
+    Serial.write(ValveDataMessage, VALVE_MESSAGE_LENGTH);
+
+    // Wait for the buffer to clear
+    delay(BUFFER_DELAY);
 }
 
 char BoolToByte(const bool Boolean) {

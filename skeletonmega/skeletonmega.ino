@@ -283,7 +283,7 @@ void ValveControl() {
 }
 
 void ReceiveData() {
-  DOGSHITDOODOOPOOPOO:
+  READ_RESET:
   // Control Variables
   const char Starter = '<';
   const char Terminator = '>';
@@ -303,12 +303,12 @@ void ReceiveData() {
     if ( ReceivedChars[0] != Starter ) {
       // Check that the first item is the starter character '<'
       // If it isn't, return out of the function without setting MESSAGE_GOOD = true
-      goto DOGSHITDOODOOPOOPOO;
+      goto READ_RESET;
       return;
     } else if ( ReceivedChars[INSTRUCTION_LENGTH+1] != Terminator ) {
       // Check that the last item is the terminator character '>'
       // It it isn't, return out of the function without setting MESSAGE_GOOD = true
-      goto DOGSHITDOODOOPOOPOO;
+      goto READ_RESET;
       return;
     } else {
       // Perform regex on the received message
@@ -319,7 +319,7 @@ void ReceiveData() {
       if (result == REGEXP_MATCHED) {
         // Status update request
         SendUpdate();
-        goto DOGSHITDOODOOPOOPOO;
+        goto READ_RESET;
         return;
       }
       // Then check if the message is an instruction
@@ -329,12 +329,12 @@ void ReceiveData() {
       }
       else if (result == REGEXP_NOMATCH) {
         // Does not match template, reject
-        goto DOGSHITDOODOOPOOPOO;
+        goto READ_RESET;
         return;
       }
       else {
         // shit pant
-        goto DOGSHITDOODOOPOOPOO;
+        goto READ_RESET;
         return;
       }
     }

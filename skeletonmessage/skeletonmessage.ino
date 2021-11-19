@@ -3,10 +3,15 @@
  * Thomas W. C. Carlson
  */
 
+int temp_TC1 = A0;
+int temp_TC2 = A2;
+
+
 // Include necessary libraries
 #include <Wire.h>           // Enables I2C
 #include <stdint.h>         // Enables strict byte-size of variable types
 #include <HardwareSerial.h> // Enables Serial.read() to grab 1 char from the buffer
+#include <Adafruit_ADS1X15.h> // Enables Adafruit I2C library for communicating with ADS1115
 
 // Union declarations
 typedef union FourBytes{
@@ -15,7 +20,7 @@ typedef union FourBytes{
   };
 
 typedef union TwoBytes {
-    uint16_t int_dat;
+    float int_dat;
     unsigned char bytes[2];
   };
 
@@ -54,29 +59,119 @@ char SensorDataMessage[SENSOR_MESSAGE_LENGTH];
 // Practically has to be found empirically
 static int BUFFER_DELAY = 50;
 
+Adafruit_ADS1115 adc48;
+Adafruit_ADS1115 adc49;
+Adafruit_ADS1115 adc4A;
+Adafruit_ADS1115 adc4B;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-
-  // Initialize 
+//  Serial.println("START");
+  // Initialize packet structure
   Packet_Start.int_dat = 0;
   Terminator.int_dat = pow(2,32)-1;  //4294967295;
   memcpy(&SensorDataMessage[0], Packet_Start.bytes, 4);
   memcpy(&SensorDataMessage[32], Terminator.bytes, 4);
 
+//  Serial.println("PACKET INIT");
+  // Initialize ADS1115
+  adc48.begin(0x48);
+  adc48.setGain(GAIN_ONE);
+//  Serial.println("ADC 48 UP");
+  adc49.begin(0x49);
+  adc49.setGain(GAIN_ONE);
+//  Serial.println("ADC 49 UP");
+  adc4A.begin(0x4A);
+  adc4A.setGain(GAIN_ONE);
+//  Serial.println("ADC 4A UP");
+  adc4B.begin(0x4B);
+  adc4B.setGain(GAIN_ONE);
+//  Serial.println("ADC INIT");
 }
 
 void loop() { 
+  
+  // Read from ADS48
+  int16_t adc48p0, adc48p1, adc48p2, adc48p3;
+  adc48p0 = adc48.readADC_SingleEnded(0);
+  adc48p1 = adc48.readADC_SingleEnded(1);
+  adc48p2 = adc48.readADC_SingleEnded(2);
+  adc48p3 = adc48.readADC_SingleEnded(3);
+//  Serial.println("ADC 48 UP");
+  
+  // Read from ADS49
+  int16_t adc49p0, adc49p1, adc49p2, adc49p3;
+  adc49p0 = adc49.readADC_SingleEnded(0);
+  adc49p1 = adc49.readADC_SingleEnded(1);
+  adc49p2 = adc49.readADC_SingleEnded(2);
+  adc49p3 = adc49.readADC_SingleEnded(3);
+//  Serial.println("ADC 49 UP");
+
+  // Read from ADS4A
+  int16_t adc4Ap0, adc4Ap1, adc4Ap2, adc4Ap3;
+  adc4Ap0 = adc4A.readADC_SingleEnded(0);
+  adc4Ap1 = adc4A.readADC_SingleEnded(1);
+  adc4Ap2 = adc4A.readADC_SingleEnded(2);
+//  Serial.println("ADC 4A UP");
+
+  // Read from ADS4B
+  int16_t adc4Bp0, adc4Bp1, adc4Bp2, adc4Bp3;
+  adc4Bp0 = adc4B.readADC_SingleEnded(0);
+  adc4Bp1 = adc4B.readADC_SingleEnded(1);
+  adc4Bp2 = adc4B.readADC_SingleEnded(2);
+//  Serial.println("ADC 4B UP");
+  
+  float volts = 0;
+  float current = 0;
+//  delay(500);
   // Values to be sent over serial
-  PT_HE.int_dat = 10;//random(0,500);
+  // wow this is terrible
+  PT_HE.int_dat = (adc48p2*0.000125)*1180-671;
+//  Serial.print("HE: ");
+//  Serial.print(PT_HE.int_dat, 4);
   PT_Purge.int_dat = 20;//random(0,500);
   PT_Pneu.int_dat = 30;//random(0,500);
-  PT_FUEL_PV.int_dat = 40;//random(0,500);
-  PT_LOX_PV.int_dat = 50;//random(0,500);
+  PT_FUEL_PV.int_dat = (adc48p2*0.000125)*442-258;
+//  Serial.print("   FUEL: ");
+//  Serial.print(PT_FUEL_PV.int_dat, 4);
+  PT_LOX_PV.int_dat = (adc48p1*0.000125)*427-245;
+//  Serial.print("   LOX: ");
+//  Serial.println(PT_LOX_PV.int_dat, 4);
+//  delay(1000);
+  PT_HE.int_dat = 0;
+//  for (int i=0; i<=4; i++) {
+//    adc48p2 = adc49.readADC_SingleEnded(3);
+////    Serial.println(" Steps: ");
+////    Serial.print(adc48p2);
+//    PT_HE.int_dat = PT_HE.int_dat + ((adc48p2*0.000125/150.0000*1000)-4)*1000/16;
+////    Serial.print("    PSI: ");
+////    Serial.print(PT_HE.int_dat);
+//    volts = volts + adc48p2*0.000125;
+////    Serial.print("    Volts: ");
+////    Serial.print(volts);
+//    current =  current + adc48p2*0.000125/150.0000*1000;
+////    Serial.print("    Current: ");
+//  }
+//  Serial.print("PSI: ");
+//    Serial.print(PT_HE.int_dat/5.0000, 4);
+//  Serial.print("    VOLTS: ");
+//    Serial.print(volts/5.0000, 4);
+//  Serial.print("    mA: ");
+//    Serial.println(current/5.0000, 4);
+//    volts = adc49p2*0.000125;
+//    Serial.print("CALIBRATED SUPPLY PSI: ");
+//    Serial.println(volts/5*427-245, 4);
+//    Serial.println(volts*1180-671, 4);
+//    Serial.println("================="); 
+//  Serial.print("   FUEL PV: ");
+//  Serial.print(PT_FUEL_PV.int_dat);   
+//  Serial.print("   LOX PV: ");
+//  Serial.println(PT_LOX_PV.int_dat);
   //PT_FUEL_INJ.int_dat = random(0,500);
   PT_CHAM.int_dat = 100;//random(0,500);
-  TC_FUEL_PV.int_dat = 110;//random(0,500);
-  TC_LOX_PV.int_dat = 120;//random(0,500);
+  TC_FUEL_PV.int_dat = ((adc4Ap0*0.000125)-1.25) * 200;
+  TC_LOX_PV.int_dat = ((adc4Ap1*0.000125)-1.25) * 200;
   TC_LOX_Valve_Main.int_dat = 130;//random(0,500);
   TC_WATER_In.int_dat = 140;//random(0,500);
   TC_WATER_Out.int_dat = 150;//random(0,500);
@@ -84,7 +179,25 @@ void loop() {
   //RC_LOX_Level.int_dat = random(0,500);
   FT_Thrust.int_dat = 500;//random(0,500);
   FL_WATER.int_dat = 250;//random(0,500);
-
+//  Serial.print("TC_FUEL_PV: ");
+//  Serial.print(TC_FUEL_PV.int_dat);
+//  Serial.print("  Steps: ");
+//  Serial.print(adc4Ap0);emp2;
+//  temp1 = analogRead(A0);
+//  Serial.print("TC1: ");
+//  Serial.print(temp1/1023.000*5, 4);
+//  temp2 = analogRead(A2);
+//  Serial.print("   TC2: ");
+//  Serial.println(temp2/1023.000*5, 4);
+//  Serial.print("TEMP 1: ");
+//  Serial.print((((temp1/1023.000*5)-1.2500)*200),4);
+//  Serial.print("   TEMP 2: ");
+//  Serial.println((((temp2
+//  Serial.print("     TC_LOX_PV: ");
+//  Serial.print(TC_LOX_PV.int_dat);
+//  Serial.print("  Steps: ");
+//  Serial.println(adc4Ap1);
+//  float temp1, t/1023.000*5)-1.2500)*200),4);
   // Serial writes
   // Assign each data point to its spot in the message array
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);

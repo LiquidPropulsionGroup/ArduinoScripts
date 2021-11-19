@@ -7,21 +7,21 @@
 #include <Regexp.h>             // Enables regex
 
 // Pin Declarations
-int FUEL_Press_ACTPIN = 13;
-int LOX_Press_ACTPIN = 12;
-int FUEL_Vent_ACTPIN = 11;
-int LOX_Vent_ACTPIN = 10;
-int MAIN_ACTPIN = 9;
-int FUEL_Purge_ACTPIN = 8;
-int LOX_Purge_ACTPIN = 7;
+int FUEL_Press_ACTPIN = 22;
+int LOX_Press_ACTPIN = 24;
+int FUEL_Vent_ACTPIN = 26;
+int LOX_Vent_ACTPIN = 32;
+int MAIN_ACTPIN = 28;
+int FUEL_Purge_ACTPIN = 30; // was 34
+int LOX_Purge_ACTPIN = 34;  // was 30
 
-int FUEL_Press_READPIN = 2;
-int LOX_Press_READPIN = A5;
-int FUEL_Vent_READPIN = A4;
-int LOX_Vent_READPIN = A3;
-int MAIN_READPIN = A2;
-int FUEL_Purge_READPIN = A1;
-int LOX_Purge_READPIN = A0;
+int FUEL_Press_READPIN = A5;
+int LOX_Press_READPIN = A6;
+int FUEL_Vent_READPIN = A0;
+int LOX_Vent_READPIN = A4;
+int MAIN_READPIN = A1;
+int FUEL_Purge_READPIN = A3;
+int LOX_Purge_READPIN = A2;
 
 // Union Declarations
 typedef union FourBytes{
@@ -30,7 +30,7 @@ typedef union FourBytes{
 };
 
 // Union instantiations in packet structure order
-// For sending status updates
+// For sending status updates 
 FourBytes Packet_Start;
 
 char FUEL_Press_Send;
@@ -201,7 +201,9 @@ void ParseMessage() {
   MAIN_Desired = ByteToBool(ReceivedChars[10]);
   FUEL_Purge_Desired = ByteToBool(ReceivedChars[12]);
   LOX_Purge_Desired = ByteToBool(ReceivedChars[14]);
-  
+//
+//  Serial.println("Test:");
+//  Serial.println(LOX_Vent_Desired);
   // With the data extracted, prepare to read a new instruction
   MESSAGE_GOOD = false;
 }
@@ -220,43 +222,43 @@ void VerifyStates() {
   // Compare the read states to the desired states and set them to be equal to the desired
   
   // If FUEL_Press does not match the ordered state
-  if (FUEL_Press != FUEL_Press_Desired) {
+  if (!FUEL_Press != FUEL_Press_Desired) {
     // Write the new state to the pin
     digitalWrite(FUEL_Press_ACTPIN, FUEL_Press_Desired);
   }
   
   // If LOX_Press does not match the ordered state
-  if (LOX_Press != LOX_Press_Desired) {
+  if (!LOX_Press != LOX_Press_Desired) {
     // Write the new state to the pin
     digitalWrite(LOX_Press_ACTPIN, LOX_Press_Desired);
   }
   
   // If FUEL_Vent does not match the ordered state
-  if (FUEL_Vent != FUEL_Vent_Desired) {
+  if (!FUEL_Vent != FUEL_Vent_Desired) {
     // Write the new state to the pin
     digitalWrite(FUEL_Vent_ACTPIN, FUEL_Vent_Desired);
   }
   
   // If LOX_Vent does not match the ordered state
-  if (LOX_Vent != LOX_Vent_Desired) {
+  if (!LOX_Vent != LOX_Vent_Desired) {
     // Write the new state to the pin
     digitalWrite(LOX_Vent_ACTPIN, LOX_Vent_Desired);
   }
   
   // If MAIN does not match the ordered state
-  if (MAIN != MAIN_Desired) {
+  if (!MAIN != MAIN_Desired) {
     // Write the new state to the pin
     digitalWrite(MAIN_ACTPIN, MAIN_Desired);
   }
   
   // If FUEL_Purge does not match the ordered state
-  if (FUEL_Purge != FUEL_Purge_Desired) {
+  if (!FUEL_Purge != FUEL_Purge_Desired) {
     // Write the new state to the pin
     digitalWrite(FUEL_Purge_ACTPIN, FUEL_Purge_Desired);
   }
   
   // If FUEL_Purge does not match the ordered state
-  if (LOX_Purge != LOX_Purge_Desired) {
+  if (!LOX_Purge != LOX_Purge_Desired) {
     // Write the new state to the pin
     digitalWrite(LOX_Purge_ACTPIN, LOX_Purge_Desired);
   }

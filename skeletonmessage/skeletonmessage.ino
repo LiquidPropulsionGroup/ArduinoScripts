@@ -20,7 +20,7 @@ typedef union FourBytes{
   };
 
 typedef union TwoBytes {
-    float int_dat;
+    uint16_t int_dat;
     unsigned char bytes[2];
   };
 

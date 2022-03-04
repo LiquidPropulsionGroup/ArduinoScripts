@@ -48,7 +48,14 @@ TwoBytes FT_Thrust;
 
 TwoBytes FL_WATER;
 
+//TwoBytes Label;
+
 FourBytes Terminator;
+
+// Debug
+//int loop_start;
+//int loop_end;
+//int loop_dur;
 
 const int SENSOR_MESSAGE_LENGTH = 36;
 char SensorDataMessage[SENSOR_MESSAGE_LENGTH];
@@ -57,7 +64,7 @@ char SensorDataMessage[SENSOR_MESSAGE_LENGTH];
 // Needs to be larger than the byte-length of the message divided by the baud/10 for bytes/s
 // Theoretically 3.125ms
 // Practically has to be found empirically
-static int BUFFER_DELAY = 50;
+static int BUFFER_DELAY = 4;
 
 Adafruit_ADS1115 adc48;
 Adafruit_ADS1115 adc49;
@@ -71,6 +78,7 @@ void setup() {
   // Initialize packet structure
   Packet_Start.int_dat = 0;
   Terminator.int_dat = pow(2,32)-1;  //4294967295;
+//  Label.int_dat = 0;
   memcpy(&SensorDataMessage[0], Packet_Start.bytes, 4);
   memcpy(&SensorDataMessage[32], Terminator.bytes, 4);
 
@@ -91,9 +99,11 @@ void setup() {
 }
 
 void loop() { 
+  // Debug
+//  loop_start = micros();
   
   // Read from ADS48
-  int16_t adc48p0, adc48p1, adc48p2, adc48p3;
+  static int16_t adc48p0, adc48p1, adc48p2, adc48p3;
   adc48p0 = adc48.readADC_SingleEnded(0);
   adc48p1 = adc48.readADC_SingleEnded(1);
   adc48p2 = adc48.readADC_SingleEnded(2);
@@ -101,7 +111,7 @@ void loop() {
 //  Serial.println("ADC 48 UP");
   
   // Read from ADS49
-  int16_t adc49p0, adc49p1, adc49p2, adc49p3;
+  static int16_t adc49p0, adc49p1, adc49p2, adc49p3;
   adc49p0 = adc49.readADC_SingleEnded(0);
   adc49p1 = adc49.readADC_SingleEnded(1);
   adc49p2 = adc49.readADC_SingleEnded(2);
@@ -109,14 +119,14 @@ void loop() {
 //  Serial.println("ADC 49 UP");
 
   // Read from ADS4A
-  int16_t adc4Ap0, adc4Ap1, adc4Ap2, adc4Ap3;
+  static int16_t adc4Ap0, adc4Ap1, adc4Ap2, adc4Ap3;
   adc4Ap0 = adc4A.readADC_SingleEnded(0);
   adc4Ap1 = adc4A.readADC_SingleEnded(1);
   adc4Ap2 = adc4A.readADC_SingleEnded(2);
 //  Serial.println("ADC 4A UP");
 
   // Read from ADS4B
-  int16_t adc4Bp0, adc4Bp1, adc4Bp2, adc4Bp3;
+  static int16_t adc4Bp0, adc4Bp1, adc4Bp2, adc4Bp3;
   adc4Bp0 = adc4B.readADC_SingleEnded(0);
   adc4Bp1 = adc4B.readADC_SingleEnded(1);
   adc4Bp2 = adc4B.readADC_SingleEnded(2);
@@ -139,7 +149,7 @@ void loop() {
 //  Serial.print("   LOX: ");
 //  Serial.println(PT_LOX_PV.int_dat, 4);
 //  delay(1000);
-  PT_HE.int_dat = 0;
+//  PT_HE.int_dat = 0;
 //  for (int i=0; i<=4; i++) {
 //    adc48p2 = adc49.readADC_SingleEnded(3);
 ////    Serial.println(" Steps: ");
@@ -179,6 +189,7 @@ void loop() {
   //RC_LOX_Level.int_dat = random(0,500);
   FT_Thrust.int_dat = 500;//random(0,500);
   FL_WATER.int_dat = 250;//random(0,500);
+//  Label.int_dat = Label.int_dat + 1;
 //  Serial.print("TC_FUEL_PV: ");
 //  Serial.print(TC_FUEL_PV.int_dat);
 //  Serial.print("  Steps: ");
@@ -215,8 +226,17 @@ void loop() {
   memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 2);
   memcpy(&SensorDataMessage[30],FL_WATER.bytes, 2);
 
+//  memcpy(&SensorDataMessage[32],Label.bytes, 2);
   // Send the array
   Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);
+
+  // Debug
+//  loop_end = micros();
+//  loop_dur = loop_end - loop_start;
+//  Serial.println(" ");
+//  Serial.println("=============LOOP ENDED============");
+//  Serial.println(loop_dur);
+
 
   // Configurable delay
   delay(BUFFER_DELAY);

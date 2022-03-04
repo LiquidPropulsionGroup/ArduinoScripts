@@ -46,8 +46,6 @@ TwoBytes RC_LOX_Level;
 
 TwoBytes FT_Thrust;
 
-TwoBytes FL_WATER;
-
 //TwoBytes Label;
 
 FourBytes Terminator;
@@ -57,13 +55,14 @@ FourBytes Terminator;
 //int loop_end;
 //int loop_dur;
 
-const int SENSOR_MESSAGE_LENGTH = 36;
+const int SENSOR_MESSAGE_LENGTH = 34;
 char SensorDataMessage[SENSOR_MESSAGE_LENGTH];
 
 // Static Delay
 // Needs to be larger than the byte-length of the message divided by the baud/10 for bytes/s
 // Theoretically 3.125ms
 // Practically has to be found empirically
+// Primarily limited by Adafruit I2C libraries, not sure if they can be improved upon
 static int BUFFER_DELAY = 4;
 
 Adafruit_ADS1115 adc48;
@@ -80,7 +79,7 @@ void setup() {
   Terminator.int_dat = pow(2,32)-1;  //4294967295;
 //  Label.int_dat = 0;
   memcpy(&SensorDataMessage[0], Packet_Start.bytes, 4);
-  memcpy(&SensorDataMessage[32], Terminator.bytes, 4);
+  memcpy(&SensorDataMessage[BUFFER_DELAY - 4], Terminator.bytes, 4);
 
 //  Serial.println("PACKET INIT");
   // Initialize ADS1115
@@ -188,7 +187,6 @@ void loop() {
   TC_CHAM.int_dat = 300;//random(0,500);
   //RC_LOX_Level.int_dat = random(0,500);
   FT_Thrust.int_dat = 500;//random(0,500);
-  FL_WATER.int_dat = 250;//random(0,500);
 //  Label.int_dat = Label.int_dat + 1;
 //  Serial.print("TC_FUEL_PV: ");
 //  Serial.print(TC_FUEL_PV.int_dat);
@@ -224,7 +222,6 @@ void loop() {
   memcpy(&SensorDataMessage[24],TC_WATER_Out.bytes, 2);
   memcpy(&SensorDataMessage[26],TC_CHAM.bytes, 2);
   memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 2);
-  memcpy(&SensorDataMessage[30],FL_WATER.bytes, 2);
 
 //  memcpy(&SensorDataMessage[32],Label.bytes, 2);
   // Send the array

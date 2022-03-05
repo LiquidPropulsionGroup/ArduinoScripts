@@ -7,21 +7,21 @@
 #include <Regexp.h>             // Enables regex
 
 // Pin Declarations
-int FUEL_Press_ACTPIN = 22;
-int LOX_Press_ACTPIN = 24;
-int FUEL_Vent_ACTPIN = 26;
-int LOX_Vent_ACTPIN = 32;
-int MAIN_ACTPIN = 28;
-int FUEL_Purge_ACTPIN = 30; // was 34
-int LOX_Purge_ACTPIN = 34;  // was 30
+int FUEL_Press_ACTPIN = 46;
+int LOX_Press_ACTPIN = 50;
+int FUEL_Vent_ACTPIN = 52;
+int LOX_Vent_ACTPIN = 48;
+int MAIN_ACTPIN = 40;
+int FUEL_Purge_ACTPIN = 44;
+int LOX_Purge_ACTPIN = 42;
 
-int FUEL_Press_READPIN = A5;
+int FUEL_Press_READPIN = A7;
 int LOX_Press_READPIN = A6;
-int FUEL_Vent_READPIN = A0;
-int LOX_Vent_READPIN = A4;
-int MAIN_READPIN = A1;
-int FUEL_Purge_READPIN = A3;
-int LOX_Purge_READPIN = A2;
+int FUEL_Vent_READPIN = A4;
+int LOX_Vent_READPIN = A1;
+int MAIN_READPIN = A2;
+int FUEL_Purge_READPIN = A5;
+int LOX_Purge_READPIN = A3;
 
 // Union Declarations
 typedef union FourBytes{

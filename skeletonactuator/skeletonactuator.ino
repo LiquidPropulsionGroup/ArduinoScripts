@@ -95,8 +95,8 @@ void setup() {
   // Initialize the normally <open/closed> behavior of the actuators
   FUEL_Press_Desired = false;           // NORMALLY CLOSED
   LOX_Press_Desired = false;            // NORMALLY CLOSED
-  FUEL_Vent_Desired = true;             // NORMALLY OPEN
-  LOX_Vent_Desired = true;              // NORMALLY OPEN
+  FUEL_Vent_Desired = false;            // NORMALLY OPEN
+  LOX_Vent_Desired = false;             // NORMALLY OPEN
   MAIN_Desired = false;                 // NORMALLY CLOSED
   FUEL_Purge_Desired = false;           // NORMALLY CLOSED
   LOX_Purge_Desired = false;            // NORMALLY CLOSED

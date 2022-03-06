@@ -122,6 +122,7 @@ void loop() {
   adc4Ap0 = adc4A.readADC_SingleEnded(0);
   adc4Ap1 = adc4A.readADC_SingleEnded(1);
   adc4Ap2 = adc4A.readADC_SingleEnded(2);
+  adc4Ap3 = adc4A.readADC_SingleEnded(3);
 //  Serial.println("ADC 4A UP");
 
   // Read from ADS4B
@@ -129,6 +130,7 @@ void loop() {
   adc4Bp0 = adc4B.readADC_SingleEnded(0);
   adc4Bp1 = adc4B.readADC_SingleEnded(1);
   adc4Bp2 = adc4B.readADC_SingleEnded(2);
+  adc4Bp3 = adc4B.readADC_SingleEnded(3);
 //  Serial.println("ADC 4B UP");
   
   float volts = 0;
@@ -136,17 +138,27 @@ void loop() {
 //  delay(500);
   // Values to be sent over serial
   // wow this is terrible
+
+  // Collect calibrated data from PT_HE
   PT_HE.int_dat = (adc48p2*0.000125)*1180-671;
 //  Serial.print("HE: ");
 //  Serial.print(PT_HE.int_dat, 4);
+
+  // Uncalibrated, static for testing
   PT_Purge.int_dat = 20;//random(0,500);
   PT_Pneu.int_dat = 30;//random(0,500);
+
+  // Collect calibrated data from PT_FUEL_PV
   PT_FUEL_PV.int_dat = (adc48p1*0.000125)*442-258;
 //  Serial.print("   FUEL: ");
 //  Serial.print(PT_FUEL_PV.int_dat, 4);
+
+  // Collect calibrated data from PT_LOX_PV
   PT_LOX_PV.int_dat = (adc49p2*0.000125)*427-245;
 //  Serial.print("   LOX: ");
 //  Serial.println(PT_LOX_PV.int_dat, 4);
+
+//// Sample debug code, averages 5 samples and displays intermediate values
 //  delay(1000);
 //  PT_HE.int_dat = 0;
 //  for (int i=0; i<=4; i++) {
@@ -177,16 +189,25 @@ void loop() {
 //  Serial.print(PT_FUEL_PV.int_dat);   
 //  Serial.print("   LOX PV: ");
 //  Serial.println(PT_LOX_PV.int_dat);
-  //PT_FUEL_INJ.int_dat = random(0,500);
+
+  // Uncalibrated data, static for testing
   PT_CHAM.int_dat = 100;//random(0,500);
+
+  // Collect uncalibrated data from TC_FUEL_PV
   TC_FUEL_PV.int_dat = ((adc4Ap0*0.000125)-1.25) * 200;
+
+  // Collect uncalibrated data from TC_LOX_PV
   TC_LOX_PV.int_dat = ((adc4Ap1*0.000125)-1.25) * 200;
+
+  // Uncalibrated data, static for testing
   TC_LOX_Valve_Main.int_dat = 130;//random(0,500);
   TC_WATER_In.int_dat = 140;//random(0,500);
   TC_WATER_Out.int_dat = 150;//random(0,500);
   TC_CHAM.int_dat = 300;//random(0,500);
   //RC_LOX_Level.int_dat = random(0,500);
   FT_Thrust.int_dat = 500;//random(0,500);
+
+// Debug
 //  Label.int_dat = Label.int_dat + 1;
 //  Serial.print("TC_FUEL_PV: ");
 //  Serial.print(TC_FUEL_PV.int_dat);
@@ -207,6 +228,7 @@ void loop() {
 //  Serial.print("  Steps: ");
 //  Serial.println(adc4Ap1);
 //  float temp1, t/1023.000*5)-1.2500)*200),4);
+
   // Serial writes
   // Assign each data point to its spot in the message array
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);
@@ -223,7 +245,6 @@ void loop() {
   memcpy(&SensorDataMessage[26],TC_CHAM.bytes, 2);
   memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 2);
 
-//  memcpy(&SensorDataMessage[32],Label.bytes, 2);
   // Send the array
   Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);
 

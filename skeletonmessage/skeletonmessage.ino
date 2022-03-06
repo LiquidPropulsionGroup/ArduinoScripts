@@ -79,7 +79,7 @@ void setup() {
   Terminator.int_dat = pow(2,32)-1;  //4294967295;
 //  Label.int_dat = 0;
   memcpy(&SensorDataMessage[0], Packet_Start.bytes, 4);
-  memcpy(&SensorDataMessage[BUFFER_DELAY - 4], Terminator.bytes, 4);
+  memcpy(&SensorDataMessage[SENSOR_MESSAGE_LENGTH  - 4], Terminator.bytes, 4);
 
 //  Serial.println("PACKET INIT");
   // Initialize ADS1115
@@ -141,10 +141,10 @@ void loop() {
 //  Serial.print(PT_HE.int_dat, 4);
   PT_Purge.int_dat = 20;//random(0,500);
   PT_Pneu.int_dat = 30;//random(0,500);
-  PT_FUEL_PV.int_dat = (adc48p2*0.000125)*442-258;
+  PT_FUEL_PV.int_dat = (adc48p1*0.000125)*442-258;
 //  Serial.print("   FUEL: ");
 //  Serial.print(PT_FUEL_PV.int_dat, 4);
-  PT_LOX_PV.int_dat = (adc48p1*0.000125)*427-245;
+  PT_LOX_PV.int_dat = (adc49p2*0.000125)*427-245;
 //  Serial.print("   LOX: ");
 //  Serial.println(PT_LOX_PV.int_dat, 4);
 //  delay(1000);

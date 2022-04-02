@@ -145,7 +145,7 @@ void loop() {
 //  Serial.print(PT_HE.int_dat, 4);
 
   // Uncalibrated, static for testing
-  PT_Purge.int_dat = 0;//random(0,500);
+  // PT_Purge.int_dat = 0;//random(0,500);
   PT_Pneu.int_dat = 0;//random(0,500);
 
   // Collect calibrated data from PT_FUEL_PV
@@ -155,6 +155,10 @@ void loop() {
 
   // Collect calibrated data from PT_LOX_PV
   PT_LOX_PV.int_dat = (adc49p2*0.000125)*427-245;
+
+  // Collect calibrated data from PT_FUEL_INJ
+  PT_FUEL_INJ.int_dat = 300;
+
 //  Serial.print("   LOX: ");
 //  Serial.println(PT_LOX_PV.int_dat, 4);
 
@@ -232,10 +236,10 @@ void loop() {
   // Serial writes
   // Assign each data point to its spot in the message array
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);
-  memcpy(&SensorDataMessage[6],PT_Purge.bytes, 2);
-  memcpy(&SensorDataMessage[8],PT_Pneu.bytes, 2);
-  memcpy(&SensorDataMessage[10],PT_FUEL_PV.bytes, 2);
-  memcpy(&SensorDataMessage[12],PT_LOX_PV.bytes, 2);
+  memcpy(&SensorDataMessage[6],PT_Pneu.bytes, 2);
+  memcpy(&SensorDataMessage[8],PT_FUEL_PV.bytes, 2);
+  memcpy(&SensorDataMessage[10],PT_LOX_PV.bytes, 2);
+  memcpy(&SensorDataMessage[12],PT_FUEL_INJ.bytes, 2);
   memcpy(&SensorDataMessage[14],PT_CHAM.bytes, 2);
   memcpy(&SensorDataMessage[16],TC_FUEL_PV.bytes, 2);
   memcpy(&SensorDataMessage[18],TC_LOX_PV.bytes, 2);

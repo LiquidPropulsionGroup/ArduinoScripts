@@ -117,8 +117,8 @@ void setup() {
 //    Serial.println(ADS[n].begin() ? "connected" : "not connected");
                                           
   }
-  ADS[0].setGain(0);                      // Set the ADS gain for the 0x48 (PT: 0.6-3.0V)
-  ADS[1].setGain(0);                      // Set the ADS gain for the 0x49 (PT: 0.6-3.0V)
+  ADS[0].setGain(1);                      // Set the ADS gain for the 0x48 (PT: 0.6-3.0V)
+  ADS[1].setGain(1);                      // Set the ADS gain for the 0x49 (PT: 0.6-3.0V)
   ADS[2].setGain(0);                      // Set the ADS gain for the 0x4A (TC: 0-5V)
   ADS[3].setGain(0);                      // Set the ADS gain for the 0x4B (TC: 0-5V)
                                           // ADS gains in this library are mapped like so:
@@ -158,6 +158,9 @@ void loop() {
   while (ADS_Read_AIN3()) {
     // Do nothing until all AIN3 lanes are sampled
   }
+
+  // Interpret the bits and write the data out
+  ParseWrite_Data();
 
   // Print the values if debugging
   Debug_Runtime_Print();
@@ -401,6 +404,61 @@ bool ADS_Read_AIN3() {
   ADS_Request_AIN0();
   // And exit the loop
   return false;
+}
+
+void ParseWrite_Data() {
+  // Convert bits to the desired values using fitting equations
+  // Pressures
+  PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
+  PT_Pneu.numDat              = 0;
+  PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
+  PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
+  PT_FUEL_INJ.numDat          = 0;
+  PT_CHAM.numDat              = 0;
+
+  // Temperatures
+  TC_FUEL_PV.numDat           = ((ADCBits[10]*0.0001875)-1.25)*200.0;
+  TC_LOX_PV.numDat            = ((ADCBits[9]*0.0001875)-1.25)*200.0;
+  TC_LOX_Valve_Main.numDat    = ((ADCBits[8]*0.0001875)-1.25)*200.0;
+  TC_WATER_In.numDat          = ((ADCBits[14]*0.0001875)-1.25)*200.0;
+  TC_WATER_Out.numDat         = ((ADCBits[13]*0.0001875)-1.25)*200.0;
+  TC_CHAM.numDat              = ((ADCBits[12]*0.0001875)-1.25)*200.0;
+
+  // Misc
+  FT_Thrust.numDat            = 0;
+
+  // Copy the data to the writing array as bytes
+  memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);
+  memcpy(&SensorDataMessage[6],PT_Pneu.bytes, 2);
+  memcpy(&SensorDataMessage[8],PT_FUEL_PV.bytes, 2);
+  memcpy(&SensorDataMessage[10],PT_LOX_PV.bytes, 2);
+  memcpy(&SensorDataMessage[12],PT_FUEL_INJ.bytes, 2);
+  memcpy(&SensorDataMessage[14],PT_CHAM.bytes, 2);
+  memcpy(&SensorDataMessage[16],TC_FUEL_PV.bytes, 2);
+  memcpy(&SensorDataMessage[18],TC_LOX_PV.bytes, 2);
+  memcpy(&SensorDataMessage[20],TC_LOX_Valve_Main.bytes, 2);
+  memcpy(&SensorDataMessage[22],TC_WATER_In.bytes, 2);
+  memcpy(&SensorDataMessage[24],TC_WATER_Out.bytes, 2);
+  memcpy(&SensorDataMessage[26],TC_CHAM.bytes, 2);
+  memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 2);
+
+  // Debug prints
+//  Serial.println(PT_HE.numDat);
+//  Serial.println(PT_Pneu.numDat);
+//  Serial.println(PT_FUEL_PV.numDat);
+//  Serial.println(PT_LOX_PV.numDat);
+//  Serial.println(PT_FUEL_INJ.numDat);
+//  Serial.println(PT_CHAM.numDat);
+//  Serial.println(TC_FUEL_PV.numDat);
+//  Serial.println(TC_LOX_PV.numDat);
+//  Serial.println(TC_LOX_Valve_Main.numDat);
+//  Serial.println(TC_WATER_In.numDat);
+//  Serial.println(TC_WATER_Out.numDat);
+//  Serial.println(TC_CHAM.numDat);
+//  Serial.println(FT_Thrust.numDat);
+
+  // Write the data out to serial
+  Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);
 }
 
 ////////////////////////END OF FILE////////////////////////

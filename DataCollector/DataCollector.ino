@@ -141,17 +141,31 @@ void setup() {
 
 void loop() {
   // Try to read data until all lanes are sampled and recorded
-  while (ADS_Read_AIN()) {
-    // Do nothing until all lanes are sampled
+//  while (ADS_Read_AIN()) {
+//    // Do nothing until all lanes are sampled
+//  }
+
+  ADS_Request_AIN0();
+  while (ADS_Read_AIN0()) {
+    // Do nothing until all AIN0 lanes are sampled
+  }
+  while (ADS_Read_AIN1()) {
+    // Do nothing until all AIN1 lanes are sampled
+  }
+  while (ADS_Read_AIN2()) {
+    // Do nothing until all AIN2 lanes are sampled
+  }
+  while (ADS_Read_AIN3()) {
+    // Do nothing until all AIN3 lanes are sampled
   }
 
   // Print the values if debugging
   Debug_Runtime_Print();
-  Debug_Delay();
+//  Debug_Delay();
   Debug_ADS_Print();
 
   // Request new reads
-  ADS_Request_Data();
+//  ADS_Request_Data();
 }
 
 bool ADS_Read_AIN() {
@@ -167,10 +181,10 @@ bool ADS_Read_AIN() {
   // If the ADS are connected and not busy, then read the AIN corresponding to the current value
   // of ChannelIndex
   for (int j = 0; j < 4; j++) {
-    // 0x48 AIN0: ADS[0], 0x49 AIN0: ADS[4], 0x4A AIN0: ADS[8], 0x4B AIN0: ADS[12]
-    //      AIN1: ADS[1],      AIN1: ADS[5],      AIN1: ADS[9],      AIN1: ADS[13]
-    //      AIN2: ADS[2],      AIN2: ADS[6],      AIN2: ADS[10],     AIN2: ADS[14]
-    //      AIN3: ADS[3],      AIN3: ADS[7],      AIN3: ADS[11],     AIN3: ADS[15]
+    // 0x48 AIN0: ADCBits[0], 0x49 AIN0: ADCBits[4], 0x4A AIN0: ADCBits[8], 0x4B AIN0: ADCBits[12]
+    //      AIN1: ADCBits[1],      AIN1: ADCBits[5],      AIN1: ADCBits[9],      AIN1: ADCBits[13]
+    //      AIN2: ADCBits[2],      AIN2: ADCBits[6],      AIN2: ADCBits[10],     AIN2: ADCBits[14]
+    //      AIN3: ADCBits[3],      AIN3: ADCBits[7],      AIN3: ADCBits[11],     AIN3: ADCBits[15]
     ADCBits[j * 4 + ChannelIndex] = ADS[j].getValue();
   }
   // Increment the ChannelIndex to prep reading the next AIN
@@ -223,6 +237,170 @@ void Debug_Runtime_Print() {
 
 void Debug_Delay() {
   delay(1000);
+}
+
+void ADS_Request_AIN0() {
+  // Reads every ADS AIN0 lane
+  // 0x48
+  if (ADS[0].isConnected()) {
+    ADS[0].requestADC(0);
+  }
+  // 0x49
+  if (ADS[1].isConnected()) {
+    ADS[1].requestADC(0);
+  }
+  // 0x4A
+  if (ADS[2].isConnected()) {
+    ADS[2].requestADC(0);
+  }
+  // 0x4B
+  if (ADS[3].isConnected()) {
+    ADS[3].requestADC(0);
+  }
+}
+
+void ADS_Request_AIN1() {
+  // Requests every ADS AIN1 lane
+  // 0x48
+  if (ADS[0].isConnected()) {
+    ADS[0].requestADC(1);
+  }
+  // 0x49
+  if (ADS[1].isConnected()) {
+    ADS[1].requestADC(1);
+  }
+  // 0x4A
+  if (ADS[2].isConnected()) {
+    ADS[2].requestADC(1);
+  }
+  // 0x4B
+  if (ADS[3].isConnected()) {
+    ADS[3].requestADC(1);
+  }
+}
+
+void ADS_Request_AIN2() {
+  // Requests every ADS AIN2 lane
+  // 0x48
+  if (ADS[0].isConnected()) {
+    ADS[0].requestADC(2);
+  }
+  // 0x49
+  if (ADS[1].isConnected()) {
+    ADS[1].requestADC(2);
+  }
+  // 0x4A
+  if (ADS[2].isConnected()) {
+    ADS[2].requestADC(2);
+  }
+  // 0x4B
+  if (ADS[3].isConnected()) {
+    ADS[3].requestADC(2);
+  }
+}
+
+void ADS_Request_AIN3() {
+  // Requests every ADS AIN3 lane
+  // 0x48
+  if (ADS[0].isConnected()) {
+    ADS[0].requestADC(3);
+  }
+  // 0x49
+  if (ADS[1].isConnected()) {
+    ADS[1].requestADC(3);
+  }
+  // 0x4A
+//  if (ADS[2].isConnected()) {
+//    ADS[2].requestADC(3);
+//  }
+  // 0x4B
+//  if (ADS[3].isConnected()) {
+//    ADS[3].requestADC(3);
+//  }
+}
+
+bool ADS_Read_AIN0() {
+  // Step through each ADS
+  for (int i = 0; i < 4; i++) {
+    // Check if it is both connected and busy
+    if (ADS[i].isConnected() && ADS[i].isBusy()) {
+      // If it is, restart the loop by returning true
+      // This behavior should continue until the ADS are done reading (not busy)
+      return true;
+    }
+  }
+  // If the ADS are not busy, read them and save to the data array
+  ADCBits[0]  = ADS[0].getValue();
+  ADCBits[4]  = ADS[1].getValue();
+  ADCBits[8]  = ADS[2].getValue();
+  ADCBits[12] = ADS[3].getValue();
+  // When this is done, request the next lane to prepare to read data
+  ADS_Request_AIN1();
+  // And exit the loop
+  return false;
+}
+
+bool ADS_Read_AIN1() {
+  // Step through each ADS
+  for (int i = 0; i < 4; i++) {
+    // Check if it is both connected and busy
+    if (ADS[i].isConnected() && ADS[i].isBusy()) {
+      // If it is, restart the loop by returning true
+      // This behavior should continue until the ADS are done reading (not busy)
+      return true;
+    }
+  }
+  // If the ADS are not busy, read them and save to the data array
+  ADCBits[1]  = ADS[0].getValue();
+  ADCBits[5]  = ADS[1].getValue();
+  ADCBits[9]  = ADS[2].getValue();
+  ADCBits[13] = ADS[3].getValue();
+  // When this is done, request the next lane to prepare to read data
+  ADS_Request_AIN2();
+  // And exit the loop
+  return false;
+}
+
+bool ADS_Read_AIN2() {
+  // Step through each ADS
+  for (int i = 0; i < 4; i++) {
+    // Check if it is both connected and busy
+    if (ADS[i].isConnected() && ADS[i].isBusy()) {
+      // If it is, restart the loop by returning true
+      // This behavior should continue until the ADS are done reading (not busy)
+      return true;
+    }
+  }
+  // If the ADS are not busy, read them and save to the data array
+  ADCBits[2]  = ADS[0].getValue();
+  ADCBits[6]  = ADS[1].getValue();
+  ADCBits[10] = ADS[2].getValue();
+  ADCBits[14] = ADS[3].getValue();
+  // When this is done, request the next lane to prepare to read data
+  ADS_Request_AIN3();
+  // And exit the loop
+  return false;
+}
+
+bool ADS_Read_AIN3() {
+  // Step through each ADS
+  for (int i = 0; i < 4; i++) {
+    // Check if it is both connected and busy
+    if (ADS[i].isConnected() && ADS[i].isBusy()) {
+      // If it is, restart the loop by returning true
+      // This behavior should continue until the ADS are done reading (not busy)
+      return true;
+    }
+  }
+  // If the ADS are not busy, read them and save to the data array
+  ADCBits[3]  = ADS[0].getValue();
+  ADCBits[7]  = ADS[1].getValue();
+//  ADCBits[11] = ADS[2].getValue();
+//  ADCBits[15] = ADS[3].getValue();
+  // When this is done, request the next lane to prepare to read data
+  ADS_Request_AIN0();
+  // And exit the loop
+  return false;
 }
 
 ////////////////////////END OF FILE////////////////////////

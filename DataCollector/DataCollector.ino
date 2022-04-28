@@ -91,7 +91,7 @@ void setup() {
 
   // Define the packet ends
   Packet_Start.numDat = 0;
-  Packet_End.numDat   = pow(2,32)-1;                      // The maximum value in 4 bytes (2^32 - 1)
+  Packet_End.numDat   = 4294967295;                       // The maximum value in 4 bytes (2^32 - 1)
   memcpy(&SensorDataMessage[0], Packet_Start.bytes, 4);   // Copy the packet_start data in byte form to the
                                                           // &MEMORY_LOCATION of the package array
   memcpy(&SensorDataMessage[SENSOR_MESSAGE_LENGTH - 4], Packet_End.bytes, 4);
@@ -163,9 +163,9 @@ void loop() {
   ParseWrite_Data();
 
   // Print the values if debugging
-  Debug_Runtime_Print();
+  //Debug_Runtime_Print();
 //  Debug_Delay();
-  Debug_ADS_Print();
+//  Debug_ADS_Print();
 
   // Request new reads
 //  ADS_Request_Data();
@@ -413,7 +413,7 @@ void ParseWrite_Data() {
   PT_Pneu.numDat              = 0;
   PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
   PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
-  PT_FUEL_INJ.numDat          = 0;
+  PT_FUEL_INJ.numDat          = (ADCBits[4]*0.000125)*456-259;
   PT_CHAM.numDat              = 0;
 
   // Temperatures
@@ -443,6 +443,8 @@ void ParseWrite_Data() {
   memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 2);
 
   // Debug prints
+//  Serial.println("============================");
+//  Serial.println(Packet_Start.numDat);
 //  Serial.println(PT_HE.numDat);
 //  Serial.println(PT_Pneu.numDat);
 //  Serial.println(PT_FUEL_PV.numDat);
@@ -456,6 +458,8 @@ void ParseWrite_Data() {
 //  Serial.println(TC_WATER_Out.numDat);
 //  Serial.println(TC_CHAM.numDat);
 //  Serial.println(FT_Thrust.numDat);
+//  Serial.println(Packet_End.numDat);
+//  Serial.write(Packet_End.bytes,4);
 
   // Write the data out to serial
   Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);

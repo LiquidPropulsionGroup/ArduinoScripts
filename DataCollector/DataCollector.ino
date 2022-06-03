@@ -5,7 +5,8 @@
  */
 
 /*
- * This code relies on I2C communication with 4 ADS1115 boards. 
+ * This code relies on I2C communication with 4 ADS1115 boards, 
+ * and a data/clock pin pairing for the HX711 board.
  */
 
 ////////////////////////BEGIN FILE////////////////////////
@@ -16,12 +17,16 @@
 #include <ADS1X15.h>  // Library for interaction with the ADS1115
                       // https://github.com/RobTillaart/ADS1X15
                       // Relies on Wire.h as well
+#include <HX711.h>    // Library for interaction with the HX711
+                      // https://github.com/bogde/HX711
+                      // Repo contains examples
 
 /*
  * UNION DECLARATIONS
  * Enables fast type conversion from float to byte
  */
 typedef union FourBytes{
+  float floatDat;
   int32_t numDat;
   unsigned char bytes[4];
   };
@@ -36,22 +41,22 @@ typedef union TwoBytes{
  * Create instances of the unions for holding data
  */
 FourBytes Packet_Start;     // Byte marker for packet start
-//////////////////////////////
+// PRESSURE VALUES ///////////
 TwoBytes  PT_HE;            // PT_HE sensor data                (0-65535)
 TwoBytes  PT_Pneu;          // PT_Pneu sensor data              (0-65535)
 TwoBytes  PT_FUEL_PV;       // PT_FUEL_PV sensor data           (0-65535)
 TwoBytes  PT_LOX_PV;        // PT_LOX_PV sensor data            (0-65535)
 TwoBytes  PT_FUEL_INJ;      // PT_FUEL_INJ sensor data          (0-65535)
 TwoBytes  PT_CHAM;          // PT_CHAM sensor data              (0-65535)
-//////////////////////////////
+// TEMPERATURE VALUES ////////
 TwoBytes  TC_FUEL_PV;       // TC_FUEL_PV sensor data           (0-65535)
 TwoBytes  TC_LOX_PV;        // TC_LOX_PV sensor data            (0-65535)
 TwoBytes  TC_LOX_Valve_Main;// TC_LOX_Valve_Main sensor data    (0-65535)
 TwoBytes  TC_WATER_In;      // TC_WATER_In sensor data          (0-65535)
 TwoBytes  TC_WATER_Out;     // TC_WATER_Out sensor data         (0-65535)
 TwoBytes  TC_CHAM;          // TC_CHAM sensor data              (0-65535)
-//////////////////////////////
-TwoBytes  FT_Thrust;        // FT_Thrust sensor data            (0-65535)
+// FORCE VALUES //////////////
+FourBytes  FT_Thrust;        // FT_Thrust sensor data           (0-65535)
 //////////////////////////////
 FourBytes Packet_End;       // Byte marker for packet start
 
@@ -59,7 +64,7 @@ FourBytes Packet_End;       // Byte marker for packet start
  * PACKET DEFINITIONS
  * Define the size of and declare the array of data to be sent over Serial.write()
  */
-const int SENSOR_MESSAGE_LENGTH = 34;             // Total Byte length of the data packet
+const int SENSOR_MESSAGE_LENGTH = 36;             // Total Byte length of the data packet
 char SensorDataMessage[SENSOR_MESSAGE_LENGTH];    // Declare the byte array of length
 const int BUFFER_DELAY = 4;                       // Static delay
                                                   // This is the time it takes for the buffer to clear
@@ -82,6 +87,17 @@ int ChannelIndex;           // Int holding which channel is being sampled for th
 long baseTime;
 long runTime;
 
+/*
+ * THRUST SENSOR DECLARATIONS
+ */
+#define HX711_CALIBRATION_FACTOR = -6460  // Calibration-determined value relating load cell compression/tension to force
+#define DOUT 6                            // HX711-connected data pin
+#define CLK 7                             // HX711-connected clock pin
+HX711 FT_SENS;                            // HX711 object
+
+/*
+ * CODE START
+ */
 void setup() {
   // put your setup code here, to run once:
 
@@ -137,6 +153,11 @@ void setup() {
 
   // Start the loop by requesting a sample
   ADS_Request_Data();
+
+  // Initialize the HX711 thrust sensor
+  FT_SENS.begin(DOUT, CLK);                       // Start board communication
+  FT_SENS.set_scale(HX711_CALIBRATION_FACTOR);    // Set the scale constant
+  FT_SENS.tare();                                 // Zero the current weight on the load cell
 }
 
 void loop() {
@@ -157,6 +178,10 @@ void loop() {
   }
   while (ADS_Read_AIN3()) {
     // Do nothing until all AIN3 lanes are sampled
+  }
+
+  while (FT_SENS_Read()) {
+    // Do nothing until the thrust sensor is sampled
   }
 
   // Interpret the bits and write the data out
@@ -406,6 +431,12 @@ bool ADS_Read_AIN3() {
   return false;
 }
 
+bool FT_SENS_Read() {
+  // Request a value from the thrust sensor
+  FT_Thrust.floatDat = FT_SENS.get_units(1);       // Returned value defaults to lb readings
+  // And exit the loop
+}
+
 void ParseWrite_Data() {
   // Convert bits to the desired values using fitting equations
   // Pressures
@@ -425,7 +456,7 @@ void ParseWrite_Data() {
   TC_CHAM.numDat              = ((ADCBits[12]*0.0001875)-1.25)*200.0;
 
   // Misc
-  FT_Thrust.numDat            = 0;
+//  FT_Thrust.numDat            = 0;
 
   // Copy the data to the writing array as bytes
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);

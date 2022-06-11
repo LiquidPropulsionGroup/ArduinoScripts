@@ -90,10 +90,15 @@ long runTime;
 /*
  * THRUST SENSOR DECLARATIONS
  */
-#define HX711_CALIBRATION_FACTOR = -6460  // Calibration-determined value relating load cell compression/tension to force
+#define HX711_CALIBRATION_FACTOR -6460  // Calibration-determined value relating load cell compression/tension to force
 #define DOUT 6                            // HX711-connected data pin
 #define CLK 7                             // HX711-connected clock pin
 HX711 FT_SENS;                            // HX711 object
+// Big fuckup on the ADC board
+// Red wire goes to GRN terminal
+// Black wire goes to WHT terminal
+// White wire goes to BLK terminal
+// Green wire goes to RED terminal
 
 /*
  * CODE START
@@ -188,12 +193,12 @@ void loop() {
   ParseWrite_Data();
 
   // Print the values if debugging
-  //Debug_Runtime_Print();
+  Debug_Runtime_Print();
 //  Debug_Delay();
 //  Debug_ADS_Print();
 
   // Request new reads
-//  ADS_Request_Data();
+  ADS_Request_Data();
 }
 
 bool ADS_Read_AIN() {
@@ -488,12 +493,12 @@ void ParseWrite_Data() {
 //  Serial.println(TC_WATER_In.numDat);
 //  Serial.println(TC_WATER_Out.numDat);
 //  Serial.println(TC_CHAM.numDat);
-//  Serial.println(FT_Thrust.numDat);
+  Serial.println(FT_Thrust.floatDat);
 //  Serial.println(Packet_End.numDat);
 //  Serial.write(Packet_End.bytes,4);
 
   // Write the data out to serial
-  Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);
+//  Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);
 }
 
 ////////////////////////END OF FILE////////////////////////

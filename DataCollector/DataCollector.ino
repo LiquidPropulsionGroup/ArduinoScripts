@@ -193,9 +193,9 @@ void loop() {
   ParseWrite_Data();
 
   // Print the values if debugging
-  Debug_Runtime_Print();
-//  Debug_Delay();
-//  Debug_ADS_Print();
+//  Debug_Runtime_Print();
+  Debug_Delay();
+  Debug_ADS_Print();
 
   // Request new reads
   ADS_Request_Data();
@@ -250,7 +250,7 @@ void Debug_ADS_Print() {
     Serial.print(l);
     Serial.print(": \t");
     for (int m = 0; m < 4; m++) {
-      Serial.print(ADCBits[m * 4 + l]*0.0001875, 3);
+      Serial.print(ADCBits[m * 4 + l]*0.000125, 3);
       Serial.print("\t");
     }
     Serial.println();
@@ -443,15 +443,17 @@ bool FT_SENS_Read() {
 }
 
 void ParseWrite_Data() {
+  int16_t ptchamvolts;
+  int16_t ptchampress;
   // Convert bits to the desired values using fitting equations
   // Pressures
   PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
   PT_Pneu.numDat              = 0;
   PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
   PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
-  PT_FUEL_INJ.numDat          = (ADCBits[4]*0.000125)*456-259;
-  PT_CHAM.numDat              = 0;
-
+  PT_FUEL_INJ.numDat          = (ADCBits[7]*0.000125)*456-259;
+  PT_CHAM.numDat              = (ADCBits[4]*0.000125)*456-259;
+  
   // Temperatures
   TC_FUEL_PV.numDat           = ((ADCBits[10]*0.0001875)-1.25)*200.0;
   TC_LOX_PV.numDat            = ((ADCBits[9]*0.0001875)-1.25)*200.0;
@@ -462,7 +464,18 @@ void ParseWrite_Data() {
 
   // Misc
 //  FT_Thrust.numDat            = 0;
-
+//  float voltstep;
+//  float curstep;
+//  voltstep = ADCBits[4]*0.000125;
+//  curstep = voltstep/150*1000;
+//  float pressure;
+//  pressure = (curstep - 4)/(20-4)*1000;
+//  Serial.print(pressure);
+//  Serial.print("PSI, ");
+//  Serial.print(voltstep);
+//  Serial.print("mV, ");
+//  Serial.print(curstep);
+//  Serial.println("mA");
   // Copy the data to the writing array as bytes
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);
   memcpy(&SensorDataMessage[6],PT_Pneu.bytes, 2);
@@ -479,23 +492,23 @@ void ParseWrite_Data() {
   memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 2);
 
   // Debug prints
-//  Serial.println("============================");
-//  Serial.println(Packet_Start.numDat);
-//  Serial.println(PT_HE.numDat);
-//  Serial.println(PT_Pneu.numDat);
-//  Serial.println(PT_FUEL_PV.numDat);
-//  Serial.println(PT_LOX_PV.numDat);
-//  Serial.println(PT_FUEL_INJ.numDat);
-//  Serial.println(PT_CHAM.numDat);
-//  Serial.println(TC_FUEL_PV.numDat);
-//  Serial.println(TC_LOX_PV.numDat);
-//  Serial.println(TC_LOX_Valve_Main.numDat);
-//  Serial.println(TC_WATER_In.numDat);
-//  Serial.println(TC_WATER_Out.numDat);
-//  Serial.println(TC_CHAM.numDat);
+  Serial.println("============================");
+  Serial.println(Packet_Start.numDat);
+  Serial.println(PT_HE.numDat);
+  Serial.println(PT_Pneu.numDat);
+  Serial.println(PT_FUEL_PV.numDat);
+  Serial.println(PT_LOX_PV.numDat);
+  Serial.println(PT_FUEL_INJ.numDat);
+  Serial.println(PT_CHAM.numDat);
+  Serial.println(TC_FUEL_PV.numDat);
+  Serial.println(TC_LOX_PV.numDat);
+  Serial.println(TC_LOX_Valve_Main.numDat);
+  Serial.println(TC_WATER_In.numDat);
+  Serial.println(TC_WATER_Out.numDat);
+  Serial.println(TC_CHAM.numDat);
   Serial.println(FT_Thrust.floatDat);
-//  Serial.println(Packet_End.numDat);
-//  Serial.write(Packet_End.bytes,4);
+  Serial.println(Packet_End.numDat);
+  Serial.write(Packet_End.bytes,4);
 
   // Write the data out to serial
 //  Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);

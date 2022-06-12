@@ -194,11 +194,11 @@ void loop() {
 
   // Print the values if debugging
 //  Debug_Runtime_Print();
-  Debug_Delay();
-  Debug_ADS_Print();
+//  Debug_Delay();
+//  Debug_ADS_Print();
 
   // Request new reads
-  ADS_Request_Data();
+//  ADS_Request_Data();
 }
 
 bool ADS_Read_AIN() {
@@ -439,6 +439,7 @@ bool ADS_Read_AIN3() {
 bool FT_SENS_Read() {
   // Request a value from the thrust sensor
   FT_Thrust.floatDat = FT_SENS.get_units(1);       // Returned value defaults to lb readings
+  // Arg is number of reads to do
   // And exit the loop
 }
 
@@ -447,35 +448,38 @@ void ParseWrite_Data() {
   int16_t ptchampress;
   // Convert bits to the desired values using fitting equations
   // Pressures
-  PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
-  PT_Pneu.numDat              = 0;
-  PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
-  PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
-  PT_FUEL_INJ.numDat          = (ADCBits[7]*0.000125)*456-259;
-  PT_CHAM.numDat              = (ADCBits[4]*0.000125)*456-259;
+//  PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
+//  PT_Pneu.numDat              = 0;
+//  PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
+//  PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
+//  PT_FUEL_INJ.numDat          = (ADCBits[7]*0.000125)*456-259;
+//  PT_CHAM.numDat              = (ADCBits[4]*0.000125)*456-259;
+
+  PT_HE.numDat                = 10;
+  PT_Pneu.numDat              = 20;
+  PT_FUEL_PV.numDat           = 30;
+  PT_LOX_PV.numDat            = 40;
+  PT_FUEL_INJ.numDat          = 50;
+  PT_CHAM.numDat              = 60;
   
   // Temperatures
-  TC_FUEL_PV.numDat           = ((ADCBits[10]*0.0001875)-1.25)*200.0;
-  TC_LOX_PV.numDat            = ((ADCBits[9]*0.0001875)-1.25)*200.0;
-  TC_LOX_Valve_Main.numDat    = ((ADCBits[8]*0.0001875)-1.25)*200.0;
-  TC_WATER_In.numDat          = ((ADCBits[14]*0.0001875)-1.25)*200.0;
-  TC_WATER_Out.numDat         = ((ADCBits[13]*0.0001875)-1.25)*200.0;
-  TC_CHAM.numDat              = ((ADCBits[12]*0.0001875)-1.25)*200.0;
+//  TC_FUEL_PV.numDat           = ((ADCBits[10]*0.0001875)-1.25)*200.0;
+//  TC_LOX_PV.numDat            = ((ADCBits[9]*0.0001875)-1.25)*200.0;
+//  TC_LOX_Valve_Main.numDat    = ((ADCBits[8]*0.0001875)-1.25)*200.0;
+//  TC_WATER_In.numDat          = ((ADCBits[14]*0.0001875)-1.25)*200.0;
+//  TC_WATER_Out.numDat         = ((ADCBits[13]*0.0001875)-1.25)*200.0;
+//  TC_CHAM.numDat              = ((ADCBits[12]*0.0001875)-1.25)*200.0;
+
+  TC_FUEL_PV.numDat           = 100;
+  TC_LOX_PV.numDat            = 200;
+  TC_LOX_Valve_Main.numDat    = 300;
+  TC_WATER_In.numDat          = 400;
+  TC_WATER_Out.numDat         = 500;
+  TC_CHAM.numDat              = 600;
 
   // Misc
-//  FT_Thrust.numDat            = 0;
-//  float voltstep;
-//  float curstep;
-//  voltstep = ADCBits[4]*0.000125;
-//  curstep = voltstep/150*1000;
-//  float pressure;
-//  pressure = (curstep - 4)/(20-4)*1000;
-//  Serial.print(pressure);
-//  Serial.print("PSI, ");
-//  Serial.print(voltstep);
-//  Serial.print("mV, ");
-//  Serial.print(curstep);
-//  Serial.println("mA");
+  FT_Thrust.floatDat            = 123.456;
+  
   // Copy the data to the writing array as bytes
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);
   memcpy(&SensorDataMessage[6],PT_Pneu.bytes, 2);
@@ -489,29 +493,44 @@ void ParseWrite_Data() {
   memcpy(&SensorDataMessage[22],TC_WATER_In.bytes, 2);
   memcpy(&SensorDataMessage[24],TC_WATER_Out.bytes, 2);
   memcpy(&SensorDataMessage[26],TC_CHAM.bytes, 2);
-  memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 2);
+  memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 4);
 
   // Debug prints
-  Serial.println("============================");
-  Serial.println(Packet_Start.numDat);
-  Serial.println(PT_HE.numDat);
-  Serial.println(PT_Pneu.numDat);
-  Serial.println(PT_FUEL_PV.numDat);
-  Serial.println(PT_LOX_PV.numDat);
-  Serial.println(PT_FUEL_INJ.numDat);
-  Serial.println(PT_CHAM.numDat);
-  Serial.println(TC_FUEL_PV.numDat);
-  Serial.println(TC_LOX_PV.numDat);
-  Serial.println(TC_LOX_Valve_Main.numDat);
-  Serial.println(TC_WATER_In.numDat);
-  Serial.println(TC_WATER_Out.numDat);
-  Serial.println(TC_CHAM.numDat);
-  Serial.println(FT_Thrust.floatDat);
-  Serial.println(Packet_End.numDat);
-  Serial.write(Packet_End.bytes,4);
+//  Serial.println("============================");
+//  Serial.print("Packet Start Mark: ");
+//  Serial.println(Packet_Start.numDat);
+//  Serial.print("PT_HE: ");
+//  Serial.println(PT_HE.numDat);
+//  Serial.print("PT_Pneu: ");
+//  Serial.println(PT_Pneu.numDat);
+//  Serial.print("PT_FUEL: ");
+//  Serial.println(PT_FUEL_PV.numDat);
+//  Serial.print("PT_LOX: ");
+//  Serial.println(PT_LOX_PV.numDat);
+//  Serial.print("PT_FINJ: ");
+//  Serial.println(PT_FUEL_INJ.numDat);
+//  Serial.print("PT_CHAM: ");
+//  Serial.println(PT_CHAM.numDat);
+//  Serial.print("TC_FUEL: ");
+//  Serial.println(TC_FUEL_PV.numDat);
+//  Serial.print("TC_LOX: ");
+//  Serial.println(TC_LOX_PV.numDat);
+//  Serial.print("TC_LOX_VALVE: ");
+//  Serial.println(TC_LOX_Valve_Main.numDat);
+//  Serial.print("TC_WIN: ");
+//  Serial.println(TC_WATER_In.numDat);
+//  Serial.print("TC_WOUT: ");
+//  Serial.println(TC_WATER_Out.numDat);
+//  Serial.print("TC_CHAM: ");
+//  Serial.println(TC_CHAM.numDat);
+//  Serial.print("FT: ");
+//  Serial.println(FT_Thrust.floatDat);
+//  Serial.print("Packet End Mark: ");
+//  Serial.println(Packet_End.numDat);
+//  Serial.write(Packet_End.bytes,4);
 
   // Write the data out to serial
-//  Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);
+  Serial.write(SensorDataMessage, SENSOR_MESSAGE_LENGTH);
 }
 
 ////////////////////////END OF FILE////////////////////////

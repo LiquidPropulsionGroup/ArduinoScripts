@@ -23,6 +23,8 @@ int MAIN_READPIN = 27;
 int FUEL_Purge_READPIN = 31;
 int LOX_Purge_READPIN = 29;
 
+int IGNITER_ACTPIN = 13;
+
 // Union Declarations
 typedef union FourBytes{
   uint32_t int_dat;
@@ -109,6 +111,7 @@ void setup() {
   pinMode(MAIN_ACTPIN, OUTPUT);
   pinMode(FUEL_Purge_ACTPIN, OUTPUT);
   pinMode(LOX_Purge_ACTPIN, OUTPUT);
+  pinMode(IGNITER_ACTPIN, OUTPUT);
   
   // Initialize input pins for sensing actuator state
   pinMode(FUEL_Press_READPIN, INPUT);
@@ -169,6 +172,20 @@ void ReceiveData() {
         if (result == REGEXP_MATCHED) {
           // Status update request
           SendUpdate();
+          goto READ_RESET;
+        }
+        result = ms.Match ("(%!%!%!%!%!%!%!%!%!%!%!%!%!%+)");
+        if (result == REGEXP_MATCHED) {
+          // Igniter on
+          Serial.println("IGNITER ON");
+          digitalWrite(IGNITER_ACTPIN, HIGH);
+          goto READ_RESET;
+        }
+        result = ms.Match ("(%!%!%!%!%!%!%!%!%!%!%!%!%!%-)");
+        if (result == REGEXP_MATCHED) {
+          // Igniter off
+          Serial.println("IGNITER OFF");
+          digitalWrite(IGNITER_ACTPIN, LOW);
           goto READ_RESET;
         }
         // Then check if the message is an instruction

@@ -56,7 +56,7 @@ TwoBytes  TC_WATER_In;      // TC_WATER_In sensor data          (0-65535)
 TwoBytes  TC_WATER_Out;     // TC_WATER_Out sensor data         (0-65535)
 TwoBytes  TC_CHAM;          // TC_CHAM sensor data              (0-65535)
 // FORCE VALUES //////////////
-FourBytes  FT_Thrust;        // FT_Thrust sensor data           (0-65535)
+FourBytes  FT_Thrust;       // FT_Thrust sensor data            (0-65535)
 //////////////////////////////
 FourBytes Packet_End;       // Byte marker for packet start
 

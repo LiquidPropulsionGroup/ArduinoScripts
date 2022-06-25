@@ -48,6 +48,7 @@ FourBytes Packet_End;       // Byte marker for packet start
 // Packet definition
 const int SENSOR_MESSAGE_LENGTH = 10;
 char SensorDataMessage[SENSOR_MESSAGE_LENGTH];
+const int SERIAL_DELAY = 100;
 
 bool WATER = 1;
 
@@ -88,6 +89,11 @@ void loop() {
 
   ParseWrite_Data();
 //  Debug_Runtime_Print();
+
+  // Delay to avoid flooding
+  interrupts();
+  delay(SERIAL_DELAY);
+  noInterrupts();
 }
 
 void Debug_Runtime_Print() {

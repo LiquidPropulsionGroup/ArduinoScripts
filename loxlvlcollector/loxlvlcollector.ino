@@ -69,23 +69,24 @@ void setup() {
 }
 
 void loop() {
-  time_high = pulseIn(pulse_pin, HIGH, 1000000);  // usec
-  time_low = pulseIn(pulse_pin, LOW, 1000000);    // usec
+  time_high = pulseIn(pulse_pin, HIGH, 2000000);  // usec
+  time_low = pulseIn(pulse_pin, LOW, 2000000);    // usec
   time_total = time_high + time_low;            // usec
   capacitance = (time_total/1e6)/(time_constant*(resistor_one + 2*resistor_two));
   // Data interpretation
   rel_capacitance = capacitance - EMPTY_CAPACITOR_CAPACITANCE;
   // Capacity as a relative proportion to a fully water-filled capacitor
   LOXLVL.numDat = rel_capacitance/CAPACITOR_RANGE*100;
-//  Serial.print("HIGH duration: ");
-//  Serial.println(time_high);
-//  Serial.print("LOW duration: ");
-//  Serial.println(time_low);
-//  Serial.print("Capacitance: ");
+  Serial.print("HIGH duration: ");
+  Serial.println(time_high);
+  Serial.print("LOW duration: ");
+  Serial.println(time_low);
+  Serial.print("Capacitance: ");
+  Serial.print(capacitance*1000000000000, 4);
 //  dtostre(capacitance, str, 5, 0);
 //  Serial.print(str);
-//  Serial.println("F");
-//  Serial.println("=================");
+  Serial.println("pF");
+  Serial.println("=================");
 
   ParseWrite_Data();
 //  Debug_Runtime_Print();

@@ -14,6 +14,7 @@ int LOX_Vent_ACTPIN = A11;
 int MAIN_ACTPIN = A15;
 int FUEL_Purge_ACTPIN = A13;
 int LOX_Purge_ACTPIN = A14;
+int WATER_Flow_ACTPIN = 
 
 int FUEL_Press_READPIN = 25;
 int LOX_Press_READPIN = 23;
@@ -22,6 +23,7 @@ int LOX_Vent_READPIN = 33;
 int MAIN_READPIN = 27;
 int FUEL_Purge_READPIN = 31;
 int LOX_Purge_READPIN = 29;
+int WATER_Flow_READPIN = 
 
 int IGNITE_ACTPIN = 12;
 
@@ -43,10 +45,11 @@ char MAIN_Send;
 char FUEL_Purge_Send;
 char LOX_Purge_Send;
 char IGNITE_Send;
+char WATER_Flow_Send;
 
 FourBytes Terminator;
 
-const int VALVE_MESSAGE_LENGTH = 16;
+const int VALVE_MESSAGE_LENGTH = 17;
 char ValveDataMessage[VALVE_MESSAGE_LENGTH];
 
 // Thereotically 1.3ms
@@ -62,15 +65,16 @@ bool MAIN;
 bool FUEL_Purge;
 bool LOX_Purge;
 bool IGNITE;
+bool WATER_Flow;
 
 // Global variables for receiving instructions over serial
-const int MESSAGE_LENGTH = 16;
+const int MESSAGE_LENGTH = 18;
 char ReceivedChars[MESSAGE_LENGTH+2];
 
 // Comparison Packet for verifying instruction messages
-// FUEL_Pres(S), LOX_Pres(s), FUEL_Ven(T), LOX_Ven(t), (M)ain, FUEL_Purg(E), FUEL_Purg(e), IGNITE(I)
+// FUEL_Pres(S), LOX_Pres(s), FUEL_Ven(T), LOX_Ven(t), (M)ain, FUEL_Purg(E), FUEL_Purg(e), IGNITE(I), (W)ater Flow
 // Interspersed with dummy request character holders
-const char InstructionTemplate[16] = {'S','\0','s','\0','T','\1','t','\1','M','\0','E','\0','e','\0','I','\0'};
+const char InstructionTemplate[18] = {'S','\0','s','\0','T','\1','t','\1','M','\0','E','\0','e','\0','I','\0','W','\0'};
 
 // Global variables for storing desired states
 // For receiving instructions
@@ -82,6 +86,7 @@ bool MAIN_Desired;
 bool FUEL_Purge_Desired;
 bool LOX_Purge_Desired;
 bool IGNITE_Desired;
+bool WATER_Flow_Desired;
 
 bool MESSAGE_GOOD = false;
 
@@ -106,6 +111,7 @@ void setup() {
   FUEL_Purge_Desired = false;           // NORMALLY CLOSED
   LOX_Purge_Desired = false;            // NORMALLY CLOSED
   IGNITE_Desired = false;               // NORMALLY OFF
+  WATER_Flow_Desired = false;           // NORMALLY CLOSED
 
   // Initialize output pins
   pinMode(FUEL_Press_ACTPIN, OUTPUT);
@@ -116,6 +122,7 @@ void setup() {
   pinMode(FUEL_Purge_ACTPIN, OUTPUT);
   pinMode(LOX_Purge_ACTPIN, OUTPUT);
   pinMode(IGNITE_ACTPIN, OUTPUT);
+  pinMode(WATER_Flow_ACTPIN, OUTPUT);
   
   // Initialize input pins for sensing actuator state
   pinMode(FUEL_Press_READPIN, INPUT);
@@ -125,6 +132,7 @@ void setup() {
   pinMode(MAIN_READPIN, INPUT);
   pinMode(FUEL_Purge_READPIN, INPUT);
   pinMode(LOX_Purge_READPIN, INPUT);
+  pinMode(WATER_Flow_READPIN, INPUT);
 
   // Execute Initializations
   for ( int a = 0; a < sizeof(ReceivedChars);  a++ ) {
@@ -172,14 +180,14 @@ void ReceiveData() {
         static MatchState ms;
         ms.Target( ReceivedChars );
         // Check if the message is a status update request
-        char result = ms.Match ("(%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?)");
+        char result = ms.Match ("(%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?)");
         if (result == REGEXP_MATCHED) {
           // Status update request
           SendUpdate();
           goto READ_RESET;
         }
         // Then check if the message is an instruction
-        result = ms.Match ("(S[01]s[01]T[01]t[01]M[01]E[01]e[01]I[01])");
+        result = ms.Match ("(S[01]s[01]T[01]t[01]M[01]E[01]e[01]I[01]W[01])");
         if (result == REGEXP_MATCHED) {
           // Matches template, allow MESSAGE_GOOD = true
         }
@@ -209,6 +217,7 @@ void ParseMessage() {
   FUEL_Purge_Desired = ByteToBool(ReceivedChars[12]);
   LOX_Purge_Desired = ByteToBool(ReceivedChars[14]);
   IGNITE_Desired = ByteToBool(ReceivedChars[16]);
+  WATER_Flow_Desired = ByteToBool(ReceivedChars[18]);
   
   // With the data extracted, prepare to read a new instruction
   MESSAGE_GOOD = false;
@@ -224,6 +233,7 @@ void VerifyStates() {
   MAIN = digitalRead(MAIN_READPIN);
   FUEL_Purge = digitalRead(FUEL_Purge_READPIN);
   LOX_Purge = digitalRead(LOX_Purge_READPIN);
+  WATER_Flow = digitalRead(WATER_Flow_READPIN);
 
   // Compare the read states to the desired states and set them to be equal to the desired
   
@@ -276,6 +286,11 @@ void VerifyStates() {
     // Update the state since we have no detection circuit currently
     IGNITE = IGNITE_Desired;
   }
+  // If WATER_Flow does not match the ordered state
+  if (!WATER_Flow != WATER_Flow_Desired) {
+    // Write the new state to the pin
+    digitalWrite(WATER_Flow_ACTPIN, WATER_Flow_Desired);
+  }
 }
 
 void SendUpdate() {
@@ -286,7 +301,9 @@ void SendUpdate() {
     LOX_Vent = digitalRead(LOX_Vent_READPIN);
     MAIN = digitalRead(MAIN_READPIN);
     FUEL_Purge = digitalRead(FUEL_Purge_READPIN);
-    LOX_Purge = digitalRead(LOX_Purge_READPIN); 
+    LOX_Purge = digitalRead(LOX_Purge_READPIN);
+    // No ignite state detection circuit currently
+    WATER_Flow = digitalRead(WATER_Flow_READPIN);
 
     // Map the boolean values to the corresponding bytes
     FUEL_Press_Send = BoolToByte(FUEL_Press);
@@ -297,6 +314,7 @@ void SendUpdate() {
     FUEL_Purge_Send = BoolToByte(FUEL_Purge);
     LOX_Purge_Send = BoolToByte(LOX_Purge);
     IGNITE_Send = BoolToByte(IGNITE);
+    WATER_Flow_Send = BoolToByte(WATER_Flow);
     
     // Serial Writes
     // Writing the actuator states to the Serial Buffer
@@ -308,6 +326,7 @@ void SendUpdate() {
     memcpy(&ValveDataMessage[9], &FUEL_Purge_Send, 1);
     memcpy(&ValveDataMessage[10], &LOX_Purge_Send, 1);
     memcpy(&ValveDataMessage[11], &IGNITE_Send, 1);
+    memcpy(&ValveDataMessage[12], &WATER_Flow_Send, 1);
 
     // Write the array to the serial buffer
     Serial.write(ValveDataMessage, VALVE_MESSAGE_LENGTH);

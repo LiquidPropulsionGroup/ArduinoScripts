@@ -7,14 +7,14 @@
 #include <Regexp.h>             // Enables regex
 
 // Pin Declarations
-int FUEL_Press_ACTPIN = A12;
-int LOX_Press_ACTPIN = A10;
-int FUEL_Vent_ACTPIN = A9;
-int LOX_Vent_ACTPIN = A11;
-int MAIN_ACTPIN = A15;
-int FUEL_Purge_ACTPIN = A13;
-int LOX_Purge_ACTPIN = A14;
-int WATER_Flow_ACTPIN = 
+int FUEL_Press_ACTPIN = A11;
+int LOX_Press_ACTPIN = A9;
+int FUEL_Vent_ACTPIN = A8;
+int LOX_Vent_ACTPIN = A10;
+int MAIN_ACTPIN = A14;
+int FUEL_Purge_ACTPIN = A12;
+int LOX_Purge_ACTPIN = A13;
+int WATER_Flow_ACTPIN = A15;
 
 int FUEL_Press_READPIN = 25;
 int LOX_Press_READPIN = 23;
@@ -23,7 +23,7 @@ int LOX_Vent_READPIN = 33;
 int MAIN_READPIN = 27;
 int FUEL_Purge_READPIN = 31;
 int LOX_Purge_READPIN = 29;
-int WATER_Flow_READPIN = 
+int WATER_Flow_READPIN = 37;
 
 int IGNITE_ACTPIN = 12;
 

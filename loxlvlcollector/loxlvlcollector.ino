@@ -69,18 +69,26 @@ void setup() {
 }
 
 void loop() {
-  time_high = pulseIn(pulse_pin, HIGH, 2000000);  // usec
-  time_low = pulseIn(pulse_pin, LOW, 2000000);    // usec
+  float tot_time;
+  
+  time_high = pulseIn(pulse_pin, HIGH, 20000000000);  // usec
+//  time_low = pulseIn(pulse_pin, LOW, 9000000);    // usec
+  time_low = time_high;
   time_total = time_high + time_low;            // usec
   capacitance = (time_total/1e6)/(time_constant*(resistor_one + 2*resistor_two));
   // Data interpretation
   rel_capacitance = capacitance - EMPTY_CAPACITOR_CAPACITANCE;
   // Capacity as a relative proportion to a fully water-filled capacitor
   LOXLVL.numDat = rel_capacitance/CAPACITOR_RANGE*100;
+  tot_time = time_total;
   Serial.print("HIGH duration: ");
   Serial.println(time_high);
   Serial.print("LOW duration: ");
   Serial.println(time_low);
+  Serial.print("TOT duration: ");
+  Serial.println(time_total);
+  Serial.print("FREQ: ");
+  Serial.println(1.000/(tot_time*1e-6),5);
   Serial.print("Capacitance: ");
   Serial.print(capacitance*1000000000000, 4);
 //  dtostre(capacitance, str, 5, 0);
@@ -117,8 +125,8 @@ void ParseWrite_Data() {
 //  Serial.println("============================");
 //  Serial.print("Packet Start Mark: ");
 //  Serial.println(Packet_Start.numDat);
-//  Serial.print("Percent Filled: ");
-//  Serial.println(LOXLVL.numDat);
+  Serial.print("Percent Filled: ");
+  Serial.println(LOXLVL.numDat);
 //  Serial.print("Packet End Mark: ");
 //  Serial.println(Packet_End.numDat);
 //  Serial.write(Packet_End.bytes,4);

@@ -78,6 +78,22 @@ void loop() {
   capacitance = (time_total/1e6)/(time_constant*(resistor_one + 2*resistor_two));
   // Data interpretation
   rel_capacitance = capacitance - EMPTY_CAPACITOR_CAPACITANCE;
+  time_high = 0;
+  time_low = 0;
+  time_total = 0;
+  capacitance = 0;
+  rel_capacitance = 0;
+  for (int i = 0; i <=1; i++) {
+    time_high = pulseIn(pulse_pin, HIGH, 20000000);  // usec
+    time_low = pulseIn(pulse_pin, LOW, 20000000);    // usec
+    time_total = time_high + time_low;            // usec
+    capacitance = (time_total/1e6)/(time_constant*(resistor_one + 2*resistor_two));
+    // Data interpretation
+    rel_capacitance = rel_capacitance + capacitance - EMPTY_CAPACITOR_CAPACITANCE;
+  }
+  rel_capacitance = rel_capacitance / 5.00;
+  
+  
   // Capacity as a relative proportion to a fully water-filled capacitor
   LOXLVL.numDat = rel_capacitance/CAPACITOR_RANGE*100;
   tot_time = time_total;

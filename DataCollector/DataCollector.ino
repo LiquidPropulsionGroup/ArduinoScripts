@@ -186,7 +186,7 @@ void loop() {
   }
 
   // Sample the HX711 load cell
-  FT_SENS_Read()
+  FT_SENS_Read();
 
   // Interpret the bits and write the data out
   ParseWrite_Data();
@@ -474,7 +474,7 @@ void ParseWrite_Data() {
   TC_CHAM.numDat              = 600;
 
   // Misc
-//  FT_Thrust.floatDat            = 123.456;
+  FT_Thrust.floatDat            = 123.456;
   
   // Copy the data to the writing array as bytes
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);

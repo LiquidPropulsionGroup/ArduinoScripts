@@ -56,7 +56,7 @@ TwoBytes  TC_WATER_In;      // TC_WATER_In sensor data          (0-65535)
 TwoBytes  TC_WATER_Out;     // TC_WATER_Out sensor data         (0-65535)
 TwoBytes  TC_CHAM;          // TC_CHAM sensor data              (0-65535)
 // FORCE VALUES //////////////
-FourBytes  FT_Thrust;       // FT_Thrust sensor data            (0-65535)
+FourBytes FT_Thrust;        // FT_Thrust sensor data            (0-65535)
 //////////////////////////////
 FourBytes Packet_End;       // Byte marker for packet start
 
@@ -66,10 +66,10 @@ FourBytes Packet_End;       // Byte marker for packet start
  */
 const int SENSOR_MESSAGE_LENGTH = 36;             // Total Byte length of the data packet
 char SensorDataMessage[SENSOR_MESSAGE_LENGTH];    // Declare the byte array of length
-const int BUFFER_DELAY = 4;                       // Static delay
+//const int BUFFER_DELAY = 4;                     // Static delay
                                                   // This is the time it takes for the buffer to clear
                                                   // after Serial.write()
-                                                  // For 34 bytes @ 115200 baud, theoretically 3.125ms
+                                                  // For 36 bytes @ 115200 baud, theoretically 2.5ms
                                                   // However, the loop execution time is longer than this
                                                   // and Serial.write() is an asynchronous process. Thus,
                                                   // it may be unnecessary.
@@ -185,9 +185,8 @@ void loop() {
     // Do nothing until all AIN3 lanes are sampled
   }
 
-  while (FT_SENS_Read()) {
-    // Do nothing until the thrust sensor is sampled
-  }
+  // Sample the HX711 load cell
+  FT_SENS_Read()
 
   // Interpret the bits and write the data out
   ParseWrite_Data();
@@ -436,16 +435,13 @@ bool ADS_Read_AIN3() {
   return false;
 }
 
-bool FT_SENS_Read() {
+void FT_SENS_Read() {
   // Request a value from the thrust sensor
   FT_Thrust.floatDat = FT_SENS.get_units(1);       // Returned value defaults to lb readings
   // Arg is number of reads to do
-  // And exit the loop
 }
 
 void ParseWrite_Data() {
-  int16_t ptchamvolts;
-  int16_t ptchampress;
   // Convert bits to the desired values using fitting equations
   // Pressures
 //  PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
@@ -478,7 +474,7 @@ void ParseWrite_Data() {
   TC_CHAM.numDat              = 600;
 
   // Misc
-  FT_Thrust.floatDat            = 123.456;
+//  FT_Thrust.floatDat            = 123.456;
   
   // Copy the data to the writing array as bytes
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);

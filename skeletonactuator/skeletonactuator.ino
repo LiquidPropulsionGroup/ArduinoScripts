@@ -74,7 +74,7 @@ char ReceivedChars[MESSAGE_LENGTH+2];
 // Comparison Packet for verifying instruction messages
 // FUEL_Pres(S), LOX_Pres(s), FUEL_Ven(T), LOX_Ven(t), (M)ain, FUEL_Purg(E), FUEL_Purg(e), IGNITE(I), (W)ater Flow
 // Interspersed with dummy request character holders
-const char InstructionTemplate[18] = {'S','\0','s','\0','T','\1','t','\1','M','\0','E','\0','e','\0','I','\0','W','\0'};
+//const char InstructionTemplate[18] = {'S','\0','s','\0','T','\1','t','\1','M','\0','E','\0','e','\0','I','\0','W','\0'};
 
 // Global variables for storing desired states
 // For receiving instructions
@@ -143,7 +143,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  // Pull the timestamp at the start of the loop
   ReceiveData();
   if (MESSAGE_GOOD == true) {
     ParseMessage();
@@ -156,10 +155,8 @@ void ReceiveData() {
   // Label for resetting the reads
   READ_RESET: 
   // Control variables
-  static byte MessageIndex = 0;
   char Starter = '<';
   char Terminator = '>';
-  char ReceivedChar;
   MESSAGE_GOOD = false;
   
   if (Serial.available() > 0) {
@@ -180,7 +177,7 @@ void ReceiveData() {
         static MatchState ms;
         ms.Target( ReceivedChars );
         // Check if the message is a status update request
-        char result = ms.Match ("(%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?)");
+        char result = ms.Match ("(%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?%?)");
         if (result == REGEXP_MATCHED) {
           // Status update request
           SendUpdate();
@@ -332,7 +329,7 @@ void SendUpdate() {
     Serial.write(ValveDataMessage, VALVE_MESSAGE_LENGTH);
 
     // Wait for the buffer to clear
-    delay(BUFFER_DELAY);
+//    delay(BUFFER_DELAY);
 }
 
 char BoolToByte(const bool Boolean) {

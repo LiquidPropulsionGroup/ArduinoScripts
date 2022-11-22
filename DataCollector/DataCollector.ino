@@ -192,7 +192,7 @@ void loop() {
   ParseWrite_Data();
 
   // Print the values if debugging
-  Debug_Runtime_Print();
+//  Debug_Runtime_Print();
 //  Debug_Delay();
 //  Debug_ADS_Print();
 

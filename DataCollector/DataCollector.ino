@@ -43,7 +43,7 @@ typedef union TwoBytes{
 FourBytes Packet_Start;     // Byte marker for packet start
 // PRESSURE VALUES ///////////
 TwoBytes  PT_HE;            // PT_HE sensor data                (0-65535)
-TwoBytes  PT_Pneu;          // PT_Pneu sensor data              (0-65535)
+//TwoBytes  PT_Pneu;          // PT_Pneu sensor data              (0-65535)
 TwoBytes  PT_FUEL_PV;       // PT_FUEL_PV sensor data           (0-65535)
 TwoBytes  PT_LOX_PV;        // PT_LOX_PV sensor data            (0-65535)
 TwoBytes  PT_FUEL_INJ;      // PT_FUEL_INJ sensor data          (0-65535)
@@ -64,7 +64,7 @@ FourBytes Packet_End;       // Byte marker for packet start
  * PACKET DEFINITIONS
  * Define the size of and declare the array of data to be sent over Serial.write()
  */
-const int SENSOR_MESSAGE_LENGTH = 36;             // Total Byte length of the data packet
+const int SENSOR_MESSAGE_LENGTH = 34;             // Total Byte length of the data packet
 char SensorDataMessage[SENSOR_MESSAGE_LENGTH];    // Declare the byte array of length
 //const int BUFFER_DELAY = 4;                     // Static delay
                                                   // This is the time it takes for the buffer to clear
@@ -273,19 +273,19 @@ void Debug_Delay() {
 
 void ADS_Request_AIN0() {
   // Reads every ADS AIN0 lane
-  // 0x48
-  if (ADS[0].isConnected()) {
-    ADS[0].requestADC(0);
-  }
-  // 0x49
+  // 0x48 - PT PNEU, UNUSED
+//  if (ADS[0].isConnected()) {
+//    ADS[0].requestADC(0);
+//  }
+  // 0x49 - PT CHAM
   if (ADS[1].isConnected()) {
     ADS[1].requestADC(0);
   }
-  // 0x4A
-  if (ADS[2].isConnected()) {
-    ADS[2].requestADC(0);
-  }
-  // 0x4B
+  // 0x4A - TC LOX VALVE, UNUSED
+//  if (ADS[2].isConnected()) {
+//    ADS[2].requestADC(0);
+//  }
+  // 0x4B - TC CHAM
   if (ADS[3].isConnected()) {
     ADS[3].requestADC(0);
   }
@@ -293,19 +293,19 @@ void ADS_Request_AIN0() {
 
 void ADS_Request_AIN1() {
   // Requests every ADS AIN1 lane
-  // 0x48
+  // 0x48 - PT FUEL
   if (ADS[0].isConnected()) {
     ADS[0].requestADC(1);
   }
-  // 0x49
-  if (ADS[1].isConnected()) {
-    ADS[1].requestADC(1);
-  }
-  // 0x4A
+  // 0x49 - UNUSED
+//  if (ADS[1].isConnected()) {
+//    ADS[1].requestADC(1);
+//  }
+  // 0x4A - TC LOX
   if (ADS[2].isConnected()) {
     ADS[2].requestADC(1);
   }
-  // 0x4B
+  // 0x4B - TC WATER OUT
   if (ADS[3].isConnected()) {
     ADS[3].requestADC(1);
   }
@@ -313,19 +313,19 @@ void ADS_Request_AIN1() {
 
 void ADS_Request_AIN2() {
   // Requests every ADS AIN2 lane
-  // 0x48
+  // 0x48 - PT HE
   if (ADS[0].isConnected()) {
     ADS[0].requestADC(2);
   }
-  // 0x49
+  // 0x49 - PT LOX
   if (ADS[1].isConnected()) {
     ADS[1].requestADC(2);
   }
-  // 0x4A
+  // 0x4A - TC FUEL
   if (ADS[2].isConnected()) {
     ADS[2].requestADC(2);
   }
-  // 0x4B
+  // 0x4B - TC WATER IN
   if (ADS[3].isConnected()) {
     ADS[3].requestADC(2);
   }
@@ -333,19 +333,19 @@ void ADS_Request_AIN2() {
 
 void ADS_Request_AIN3() {
   // Requests every ADS AIN3 lane
-  // 0x48
-  if (ADS[0].isConnected()) {
-    ADS[0].requestADC(3);
-  }
-  // 0x49
+  // 0x48 - PT PURGE, UNUSED
+//  if (ADS[0].isConnected()) {
+//    ADS[0].requestADC(3);
+//  }
+  // 0x49 - PT FUEL INJ
   if (ADS[1].isConnected()) {
     ADS[1].requestADC(3);
   }
-  // 0x4A
+  // 0x4A - UNUSED
 //  if (ADS[2].isConnected()) {
 //    ADS[2].requestADC(3);
 //  }
-  // 0x4B
+  // 0x4B - UNUSED
 //  if (ADS[3].isConnected()) {
 //    ADS[3].requestADC(3);
 //  }
@@ -362,10 +362,10 @@ bool ADS_Read_AIN0() {
     }
   }
   // If the ADS are not busy, read them and save to the data array
-  ADCBits[0]  = ADS[0].getValue();
-  ADCBits[4]  = ADS[1].getValue();
-  ADCBits[8]  = ADS[2].getValue();
-  ADCBits[12] = ADS[3].getValue();
+//  ADCBits[0]  = ADS[0].getValue(); // PT PNEU, UNUSED
+  ADCBits[4]  = ADS[1].getValue(); // PT CHAM
+//  ADCBits[8]  = ADS[2].getValue(); // TC LOX VALVE, UNUSED
+  ADCBits[12] = ADS[3].getValue(); // TC CHAM
   // When this is done, request the next lane to prepare to read data
   ADS_Request_AIN1();
   // And exit the loop
@@ -383,10 +383,10 @@ bool ADS_Read_AIN1() {
     }
   }
   // If the ADS are not busy, read them and save to the data array
-  ADCBits[1]  = ADS[0].getValue();
-  ADCBits[5]  = ADS[1].getValue();
-  ADCBits[9]  = ADS[2].getValue();
-  ADCBits[13] = ADS[3].getValue();
+  ADCBits[1]  = ADS[0].getValue(); // PT FUEL
+//  ADCBits[5]  = ADS[1].getValue(); // UNUSED
+  ADCBits[9]  = ADS[2].getValue(); // TC LOX
+  ADCBits[13] = ADS[3].getValue(); // TC WATER OUT
   // When this is done, request the next lane to prepare to read data
   ADS_Request_AIN2();
   // And exit the loop
@@ -404,10 +404,10 @@ bool ADS_Read_AIN2() {
     }
   }
   // If the ADS are not busy, read them and save to the data array
-  ADCBits[2]  = ADS[0].getValue();
-  ADCBits[6]  = ADS[1].getValue();
-  ADCBits[10] = ADS[2].getValue();
-  ADCBits[14] = ADS[3].getValue();
+  ADCBits[2]  = ADS[0].getValue(); // PT HE
+  ADCBits[6]  = ADS[1].getValue(); // PT LOX
+  ADCBits[10] = ADS[2].getValue(); // TC FUEL
+  ADCBits[14] = ADS[3].getValue(); // TC WATER IN
   // When this is done, request the next lane to prepare to read data
   ADS_Request_AIN3();
   // And exit the loop
@@ -425,10 +425,10 @@ bool ADS_Read_AIN3() {
     }
   }
   // If the ADS are not busy, read them and save to the data array
-  ADCBits[3]  = ADS[0].getValue();
-  ADCBits[7]  = ADS[1].getValue();
-//  ADCBits[11] = ADS[2].getValue();
-//  ADCBits[15] = ADS[3].getValue();
+//  ADCBits[3]  = ADS[0].getValue(); // PT PURGE, UNUSED
+  ADCBits[7]  = ADS[1].getValue(); // PT FUEL INJ
+//  ADCBits[11] = ADS[2].getValue(); // UNUSED
+//  ADCBits[15] = ADS[3].getValue(); // UNUSED
   // When this is done, request the next lane to prepare to read data
   ADS_Request_AIN0();
   // And exit the loop
@@ -444,52 +444,52 @@ void FT_SENS_Read() {
 void ParseWrite_Data() {
   // Convert bits to the desired values using fitting equations
   // Pressures
-//  PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
+  PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
 //  PT_Pneu.numDat              = 0;
-//  PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
-//  PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
-//  PT_FUEL_INJ.numDat          = (ADCBits[7]*0.000125)*456-259;
-//  PT_CHAM.numDat              = (ADCBits[4]*0.000125)*456-259;
+  PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
+  PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
+  PT_FUEL_INJ.numDat          = (ADCBits[7]*0.000125)*456-259;
+  PT_CHAM.numDat              = (ADCBits[4]*0.000125)*456-259;
 
-  PT_HE.numDat                = 10;
-  PT_Pneu.numDat              = 20;
-  PT_FUEL_PV.numDat           = 30;
-  PT_LOX_PV.numDat            = 40;
-  PT_FUEL_INJ.numDat          = 50;
-  PT_CHAM.numDat              = 60;
+//  PT_HE.numDat                = 10;
+//  PT_Pneu.numDat              = 20;
+//  PT_FUEL_PV.numDat           = 30;
+//  PT_LOX_PV.numDat            = 40;
+//  PT_FUEL_INJ.numDat          = 50;
+//  PT_CHAM.numDat              = 60;
   
-  // Temperatures
-//  TC_FUEL_PV.numDat           = ((ADCBits[10]*0.0001875)-1.25)*200.0;
-//  TC_LOX_PV.numDat            = ((ADCBits[9]*0.0001875)-1.25)*200.0;
-//  TC_LOX_Valve_Main.numDat    = ((ADCBits[8]*0.0001875)-1.25)*200.0;
-//  TC_WATER_In.numDat          = ((ADCBits[14]*0.0001875)-1.25)*200.0;
-//  TC_WATER_Out.numDat         = ((ADCBits[13]*0.0001875)-1.25)*200.0;
-//  TC_CHAM.numDat              = ((ADCBits[12]*0.0001875)-1.25)*200.0;
+//   Temperatures
+  TC_FUEL_PV.numDat           = ((ADCBits[10]*0.0001875)-1.25)*200.0;
+  TC_LOX_PV.numDat            = ((ADCBits[9]*0.0001875)-1.25)*200.0;
+  TC_LOX_Valve_Main.numDat    = ((ADCBits[8]*0.0001875)-1.25)*200.0;
+  TC_WATER_In.numDat          = ((ADCBits[14]*0.0001875)-1.25)*200.0;
+  TC_WATER_Out.numDat         = ((ADCBits[13]*0.0001875)-1.25)*200.0;
+  TC_CHAM.numDat              = ((ADCBits[12]*0.0001875)-1.25)*200.0;
 
-  TC_FUEL_PV.numDat           = 100;
-  TC_LOX_PV.numDat            = 200;
-  TC_LOX_Valve_Main.numDat    = 300;
-  TC_WATER_In.numDat          = 400;
-  TC_WATER_Out.numDat         = 500;
-  TC_CHAM.numDat              = 600;
+//  TC_FUEL_PV.numDat           = 100;
+//  TC_LOX_PV.numDat            = 200;
+//  TC_LOX_Valve_Main.numDat    = 300;
+//  TC_WATER_In.numDat          = 400;
+//  TC_WATER_Out.numDat         = 500;
+//  TC_CHAM.numDat              = 600;
 
   // Misc
   FT_Thrust.floatDat            = 123.456;
   
   // Copy the data to the writing array as bytes
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);
-  memcpy(&SensorDataMessage[6],PT_Pneu.bytes, 2);
-  memcpy(&SensorDataMessage[8],PT_FUEL_PV.bytes, 2);
-  memcpy(&SensorDataMessage[10],PT_LOX_PV.bytes, 2);
-  memcpy(&SensorDataMessage[12],PT_FUEL_INJ.bytes, 2);
-  memcpy(&SensorDataMessage[14],PT_CHAM.bytes, 2);
-  memcpy(&SensorDataMessage[16],TC_FUEL_PV.bytes, 2);
-  memcpy(&SensorDataMessage[18],TC_LOX_PV.bytes, 2);
-  memcpy(&SensorDataMessage[20],TC_LOX_Valve_Main.bytes, 2);
-  memcpy(&SensorDataMessage[22],TC_WATER_In.bytes, 2);
-  memcpy(&SensorDataMessage[24],TC_WATER_Out.bytes, 2);
-  memcpy(&SensorDataMessage[26],TC_CHAM.bytes, 2);
-  memcpy(&SensorDataMessage[28],FT_Thrust.bytes, 4);
+//  memcpy(&SensorDataMessage[6],PT_Pneu.bytes, 2);
+  memcpy(&SensorDataMessage[6],PT_FUEL_PV.bytes, 2);
+  memcpy(&SensorDataMessage[8],PT_LOX_PV.bytes, 2);
+  memcpy(&SensorDataMessage[10],PT_FUEL_INJ.bytes, 2);
+  memcpy(&SensorDataMessage[12],PT_CHAM.bytes, 2);
+  memcpy(&SensorDataMessage[14],TC_FUEL_PV.bytes, 2);
+  memcpy(&SensorDataMessage[16],TC_LOX_PV.bytes, 2);
+  memcpy(&SensorDataMessage[18],TC_LOX_Valve_Main.bytes, 2);
+  memcpy(&SensorDataMessage[20],TC_WATER_In.bytes, 2);
+  memcpy(&SensorDataMessage[22],TC_WATER_Out.bytes, 2);
+  memcpy(&SensorDataMessage[24],TC_CHAM.bytes, 2);
+  memcpy(&SensorDataMessage[26],FT_Thrust.bytes, 4);
 
   // Debug prints
 //  Serial.println("============================");

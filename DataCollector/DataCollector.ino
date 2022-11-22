@@ -64,7 +64,7 @@ FourBytes Packet_End;       // Byte marker for packet start
  * PACKET DEFINITIONS
  * Define the size of and declare the array of data to be sent over Serial.write()
  */
-const int SENSOR_MESSAGE_LENGTH = 34;             // Total Byte length of the data packet
+const int SENSOR_MESSAGE_LENGTH = 32;             // Total Byte length of the data packet
 char SensorDataMessage[SENSOR_MESSAGE_LENGTH];    // Declare the byte array of length
 //const int BUFFER_DELAY = 4;                     // Static delay
                                                   // This is the time it takes for the buffer to clear
@@ -192,7 +192,7 @@ void loop() {
   ParseWrite_Data();
 
   // Print the values if debugging
-//  Debug_Runtime_Print();
+  Debug_Runtime_Print();
 //  Debug_Delay();
 //  Debug_ADS_Print();
 
@@ -461,7 +461,7 @@ void ParseWrite_Data() {
 //   Temperatures
   TC_FUEL_PV.numDat           = ((ADCBits[10]*0.0001875)-1.25)*200.0;
   TC_LOX_PV.numDat            = ((ADCBits[9]*0.0001875)-1.25)*200.0;
-  TC_LOX_Valve_Main.numDat    = ((ADCBits[8]*0.0001875)-1.25)*200.0;
+//  TC_LOX_Valve_Main.numDat    = ((ADCBits[8]*0.0001875)-1.25)*200.0;
   TC_WATER_In.numDat          = ((ADCBits[14]*0.0001875)-1.25)*200.0;
   TC_WATER_Out.numDat         = ((ADCBits[13]*0.0001875)-1.25)*200.0;
   TC_CHAM.numDat              = ((ADCBits[12]*0.0001875)-1.25)*200.0;
@@ -485,11 +485,11 @@ void ParseWrite_Data() {
   memcpy(&SensorDataMessage[12],PT_CHAM.bytes, 2);
   memcpy(&SensorDataMessage[14],TC_FUEL_PV.bytes, 2);
   memcpy(&SensorDataMessage[16],TC_LOX_PV.bytes, 2);
-  memcpy(&SensorDataMessage[18],TC_LOX_Valve_Main.bytes, 2);
-  memcpy(&SensorDataMessage[20],TC_WATER_In.bytes, 2);
-  memcpy(&SensorDataMessage[22],TC_WATER_Out.bytes, 2);
-  memcpy(&SensorDataMessage[24],TC_CHAM.bytes, 2);
-  memcpy(&SensorDataMessage[26],FT_Thrust.bytes, 4);
+//  memcpy(&SensorDataMessage[18],TC_LOX_Valve_Main.bytes, 2);
+  memcpy(&SensorDataMessage[18],TC_WATER_In.bytes, 2);
+  memcpy(&SensorDataMessage[20],TC_WATER_Out.bytes, 2);
+  memcpy(&SensorDataMessage[22],TC_CHAM.bytes, 2);
+  memcpy(&SensorDataMessage[24],FT_Thrust.bytes, 4);
 
   // Debug prints
 //  Serial.println("============================");

@@ -43,7 +43,7 @@ typedef union TwoBytes{
 FourBytes Packet_Start;     // Byte marker for packet start
 // PRESSURE VALUES ///////////
 TwoBytes  PT_HE;            // PT_HE sensor data                (0-65535)
-//TwoBytes  PT_Pneu;          // PT_Pneu sensor data              (0-65535)
+TwoBytes  PT_LOX_2;          // PT_Pneu sensor data              (0-65535)
 TwoBytes  PT_FUEL_PV;       // PT_FUEL_PV sensor data           (0-65535)
 TwoBytes  PT_LOX_PV;        // PT_LOX_PV sensor data            (0-65535)
 TwoBytes  PT_FUEL_INJ;      // PT_FUEL_INJ sensor data          (0-65535)
@@ -64,7 +64,7 @@ FourBytes Packet_End;       // Byte marker for packet start
  * PACKET DEFINITIONS
  * Define the size of and declare the array of data to be sent over Serial.write()
  */
-const int SENSOR_MESSAGE_LENGTH = 32;             // Total Byte length of the data packet
+const int SENSOR_MESSAGE_LENGTH = 34;             // Total Byte length of the data packet
 char SensorDataMessage[SENSOR_MESSAGE_LENGTH];    // Declare the byte array of length
 //const int BUFFER_DELAY = 4;                     // Static delay
                                                   // This is the time it takes for the buffer to clear
@@ -273,10 +273,10 @@ void Debug_Delay() {
 
 void ADS_Request_AIN0() {
   // Reads every ADS AIN0 lane
-  // 0x48 - PT PNEU, UNUSED
-//  if (ADS[0].isConnected()) {
-//    ADS[0].requestADC(0);
-//  }
+  // 0x48 - PT LOX 2
+  if (ADS[0].isConnected()) {
+    ADS[0].requestADC(0);
+  }
   // 0x49 - PT CHAM
   if (ADS[1].isConnected()) {
     ADS[1].requestADC(0);
@@ -362,7 +362,7 @@ bool ADS_Read_AIN0() {
     }
   }
   // If the ADS are not busy, read them and save to the data array
-//  ADCBits[0]  = ADS[0].getValue(); // PT PNEU, UNUSED
+  ADCBits[0]  = ADS[0].getValue(); // PT LOX 2
   ADCBits[4]  = ADS[1].getValue(); // PT CHAM
 //  ADCBits[8]  = ADS[2].getValue(); // TC LOX VALVE, UNUSED
   ADCBits[12] = ADS[3].getValue(); // TC CHAM
@@ -445,7 +445,7 @@ void ParseWrite_Data() {
   // Convert bits to the desired values using fitting equations
   // Pressures
   PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
-//  PT_Pneu.numDat              = 0;
+  PT_LOX_2.numDat             = 0;
   PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
   PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
   PT_FUEL_INJ.numDat          = (ADCBits[7]*0.000125)*456-259;
@@ -474,22 +474,22 @@ void ParseWrite_Data() {
 //  TC_CHAM.numDat              = 600;
 
   // Misc
-  FT_Thrust.floatDat            = 123.456;
+//  FT_Thrust.floatDat            = 123.456;
   
   // Copy the data to the writing array as bytes
   memcpy(&SensorDataMessage[4],PT_HE.bytes, 2);
-//  memcpy(&SensorDataMessage[6],PT_Pneu.bytes, 2);
-  memcpy(&SensorDataMessage[6],PT_FUEL_PV.bytes, 2);
-  memcpy(&SensorDataMessage[8],PT_LOX_PV.bytes, 2);
-  memcpy(&SensorDataMessage[10],PT_FUEL_INJ.bytes, 2);
-  memcpy(&SensorDataMessage[12],PT_CHAM.bytes, 2);
-  memcpy(&SensorDataMessage[14],TC_FUEL_PV.bytes, 2);
-  memcpy(&SensorDataMessage[16],TC_LOX_PV.bytes, 2);
+  memcpy(&SensorDataMessage[6],PT_LOX_2.bytes, 2);
+  memcpy(&SensorDataMessage[8],PT_FUEL_PV.bytes, 2);
+  memcpy(&SensorDataMessage[10],PT_LOX_PV.bytes, 2);
+  memcpy(&SensorDataMessage[12],PT_FUEL_INJ.bytes, 2);
+  memcpy(&SensorDataMessage[14],PT_CHAM.bytes, 2);
+  memcpy(&SensorDataMessage[16],TC_FUEL_PV.bytes, 2);
+  memcpy(&SensorDataMessage[18],TC_LOX_PV.bytes, 2);
 //  memcpy(&SensorDataMessage[18],TC_LOX_Valve_Main.bytes, 2);
-  memcpy(&SensorDataMessage[18],TC_WATER_In.bytes, 2);
-  memcpy(&SensorDataMessage[20],TC_WATER_Out.bytes, 2);
-  memcpy(&SensorDataMessage[22],TC_CHAM.bytes, 2);
-  memcpy(&SensorDataMessage[24],FT_Thrust.bytes, 4);
+  memcpy(&SensorDataMessage[20],TC_WATER_In.bytes, 2);
+  memcpy(&SensorDataMessage[22],TC_WATER_Out.bytes, 2);
+  memcpy(&SensorDataMessage[24],TC_CHAM.bytes, 2);
+  memcpy(&SensorDataMessage[26],FT_Thrust.bytes, 4);
 
   // Debug prints
 //  Serial.println("============================");

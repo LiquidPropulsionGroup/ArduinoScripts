@@ -445,11 +445,11 @@ void ParseWrite_Data() {
   // Convert bits to the desired values using fitting equations
   // Pressures
   PT_HE.numDat                = (ADCBits[2]*0.000125)*1180-671;
-  PT_LOX_2.numDat             = 0;
+  PT_LOX_2.numDat             = (ADCBits[0]*0.000125)*419-248;
   PT_FUEL_PV.numDat           = (ADCBits[1]*0.000125)*442-258;
   PT_LOX_PV.numDat            = (ADCBits[6]*0.000125)*427-245;
   PT_FUEL_INJ.numDat          = (ADCBits[7]*0.000125)*456-259;
-  PT_CHAM.numDat              = (ADCBits[4]*0.000125)*456-259;
+  PT_CHAM.numDat              = (ADCBits[4]*0.000125)*442-259;
 
 //  PT_HE.numDat                = 10;
 //  PT_Pneu.numDat              = 20;
